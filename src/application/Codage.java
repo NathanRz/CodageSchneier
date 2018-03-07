@@ -1,6 +1,10 @@
 package application;
 
 import java.util.ArrayList;
+
+import javafx.beans.property.ReadOnlyDoubleProperty;
+import javafx.beans.property.ReadOnlyDoubleWrapper;
+import javafx.concurrent.Task;
 import java.util.Collections;
 import java.util.List;
 
@@ -18,6 +22,7 @@ public class Codage{
 	protected final int JN = 53;
 	protected final int JR = 54;
 	protected final int NBCHARS = 35;
+	private final ReadOnlyDoubleWrapper progress = new ReadOnlyDoubleWrapper();
 
 	public Codage(String content){
 		this.content = content.toUpperCase();
@@ -49,7 +54,7 @@ public class Codage{
 
         //Génération de la liste des caractères correspondant au message au format ASCII
 
-        this.contentASCII = Codage.stringToArray(this.content);
+        this.stringToArray(this.contentASCII,this.content);
 	}
 
     public void etape1(){
@@ -134,9 +139,8 @@ public class Codage{
     		this.clef.add(this.operationsFluxClef());
     }
 
-    public static ArrayList<Integer> stringToArray(String message){
+    public void stringToArray(ArrayList<Integer> array,String message){
         int lg = message.length();
-        ArrayList<Integer> array = new ArrayList(lg);
 
         for(int i = 0; i < lg; i++){
             if(message.charAt(i) == 32 ) //Ici on code l'espace
@@ -160,8 +164,7 @@ public class Codage{
             else
                 array.add(((int) message.charAt(i)) - 64);
         }
-
-        return array;
+        
     }
 
     public static String arrayToString( ArrayList<Integer> array){
@@ -197,9 +200,7 @@ public class Codage{
     public void codage(){
 
         int lg = this.content.length();
-        
-        //double progress = 100/lg;
-
+        progress.set(0);
         int val;
         for(int i =0; i < lg; i++){
 
@@ -207,11 +208,11 @@ public class Codage{
                val = code.get(i);
            else*/
            val = ((this.contentASCII.get(i) + this.clef.get(i)) % NBCHARS) + 1;
-
-           //pb.setProgress(pb.getProgress()+progress);
+           progress.set(1.0*i / 100);
            this.mCode.add(val);
         }
-
+        System.out.println(this.contentASCII);
+        	System.out.println(this.mCode);
         this.mCodeStr = Codage.arrayToString(this.mCode);
     }
 
@@ -233,6 +234,16 @@ public class Codage{
         }
 
         this.result = Codage.arrayToString(this.mDecode);
+    }
+    
+    
+
+    public double getProgress() {
+        return progressProperty().get();
+    }
+
+    public ReadOnlyDoubleProperty progressProperty() {
+        return progress ;
     }
 
     public String getMessageCode(){

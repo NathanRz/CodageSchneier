@@ -1,18 +1,9 @@
 package application;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
@@ -31,9 +22,11 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.concurrent.Task;
 
 public class Main extends Application{
 	static ProgressBar pb = new ProgressBar();
+	static CodageFichierTxt c;
 	public static void main(String[] args) {
         Application.launch(args);
     }
@@ -62,8 +55,14 @@ public class Main extends Application{
         Label lbMessDec = new Label("Message dÃ©codÃ© : ");
         Label lbCleDec = new Label();
         Label lbDecodage = new Label();
+        Label lbPath = new Label();
+        Label infoState = new Label();
         Button submit = new Button("Encrypter");
-        Button chooseFile = new Button("Charger");
+        Button chooseFile = new Button("Sélectionner un fichier");
+        Button coder = new Button("Coder");
+        coder.setDisable(true);
+        Button decoder = new Button("Decoder");
+        decoder.setDisable(true);
         Group root = new Group();
         Scene scene = new Scene(root, 500, 400, Color.GAINSBORO);
         BorderPane borderPane = new BorderPane();
@@ -80,9 +79,10 @@ public class Main extends Application{
         HBox messCodBox = new HBox(lbMessCod,lbCodage);
         HBox cleDecBox = new HBox(lbMessDecCle,lbCleDec);
         HBox messDecBox = new HBox(lbMessDec, lbDecodage);
+        HBox btns = new HBox(chooseFile,coder,decoder);
 
         VBox box = new VBox(textBox, submit, cleBox, messCodBox, cleDecBox, messDecBox);
-        VBox boxFile = new VBox(pb,chooseFile);
+        VBox boxFile = new VBox(pb,lbPath,btns,infoState);
         box.setPadding(new Insets(10,10,10,10));
         box.setSpacing(10);
         box.prefHeightProperty().bind(scene.heightProperty());
@@ -101,6 +101,8 @@ public class Main extends Application{
         root.getChildren().add(borderPane);
 
         primaryStage.setScene(scene);
+        
+        File f = null;
 
         /*
          * Events
@@ -121,15 +123,74 @@ public class Main extends Application{
          });
          chooseFile.setOnAction(new EventHandler<ActionEvent>() {
              public void handle(ActionEvent event) {
+            	 FileChooser.ExtensionFilter extFilter = 
+                         new FileChooser.ExtensionFilter("TEXT files (*.txt)", "*.txt");
+                 fileChooser.getExtensionFilters().add(extFilter);
                  File f = fileChooser.showOpenDialog(primaryStage);
-                 CodageFichierTxt c = new CodageFichierTxt(f);
-                 c.init();
-                 c.codage();
-                 c.decodage();
-                 c.saveCodeToFile();
-                 c.saveDecodeToFile();
+                 
+                 
+                 if (f != null) {
+                     lbPath.setText(f.getPath());
+                     c = new CodageFichierTxt(f);
+                     c.init();
+                     coder.setDisable(false);
+                     decoder.setDisable(false);
+                 }
+                 
              }
          });
+         
+         coder.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent arg0) {
+				// TODO Auto-generated method stub
+				Task<Void> task = new Task<Void>() {
+					@Override protected Void call() throws Exception {
+						pb.progressProperty().unbind();
+						pb.progressProperty().bind(c.progressProperty());
+						
+		
+						c.progressProperty().addListener((obs, oldProgress, newProgress) 
+						->updateProgress(newProgress.doubleValue(), 1));
+						    
+						
+						c.codage();
+						c.saveCodeToFile();
+						
+						Platform.runLater(new Runnable() {
+						    @Override
+						    public void run() {
+						    	infoState.setText("Fichier codé avec succès !");
+						    }
+						});
+						return null;
+					}
+				};
+				
+				
+				Thread th = new Thread(task);
+				th.start();
+				
+			}
+        	 
+        	 
+         });
+         
+         decoder.setOnAction(new EventHandler<ActionEvent>() {
+
+ 			@Override
+ 			public void handle(ActionEvent arg0) {
+
+				c.decodage();
+				c.saveDecodeToFile();
+				
+				infoState.setText("Fichier décodé avec succès !");
+				
+ 			}
+         	 
+         	 
+          });
          
          primaryStage.show();
     }

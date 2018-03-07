@@ -1,10 +1,12 @@
 package application;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -17,7 +19,19 @@ public class CodageFichierTxt extends Codage{
 		// TODO Auto-generated constructor stub
 		this.filename = f.getName().lastIndexOf(".") > 0 ? f.getName().substring(0, f.getName().lastIndexOf(".")) : "";
 		try {
-			String content = new String(Files.readAllBytes(Paths.get(f.getPath())));
+			
+			BufferedReader reader = Files.newBufferedReader(Paths.get(f.getPath()), StandardCharsets.UTF_8);
+
+	          String line;
+	          String content = "";
+	            while ((line = reader.readLine()) != null) {
+	            	//marche pas toujours codé par 35
+	                content += line +"\n";
+	            }
+			//String content = new String(Files.readAllBytes(Paths.get(f.getPath())));
+			
+			for(int i = 0; i < content.length(); i++)
+				System.out.print(content.charAt(i));
 			super.setContent(content.toUpperCase());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
