@@ -27,7 +27,7 @@ import javafx.concurrent.Task;
 public class Main extends Application{
 	static ProgressBar pb = new ProgressBar();
 	static CodageFichierTxt c;
-        static CodageFichierImg cImg;
+        static CodageFichierBin cImg;
 	public static void main(String[] args) {
         Application.launch(args);
     }
@@ -63,7 +63,7 @@ public class Main extends Application{
         Label infoState = new Label();
         Button submit = new Button("Encrypter");
         Button chooseFile = new Button("Sélectionner un fichier");
-        Button chooseImg = new Button("Sélectionner une image");
+        Button chooseImg = new Button("Sélectionner un fichier");
         Button coder = new Button("Coder");
         coder.setDisable(true);
         Button decoder = new Button("Decoder");
@@ -76,7 +76,7 @@ public class Main extends Application{
         TabPane tabPane = new TabPane();
         Tab tab = new Tab("Champ de texte");
         Tab tabFile = new Tab("Fichier");
-        Tab tabImg = new Tab("Image");
+        Tab tabImg = new Tab("Fichier binaire");
 
 
         pb.prefWidthProperty().bind(scene.heightProperty());
@@ -210,12 +210,12 @@ public class Main extends Application{
             	 /*FileChooser.ExtensionFilter extFilter = 
                          new FileChooser.ExtensionFilter("TEXT files (*.txt)", "*.txt");
                  fileChooser.getExtensionFilters().add(extFilter);*/
-                 File f = fileChooser.showOpenDialog(primaryStage);
+                 File f = imgChooser.showOpenDialog(primaryStage);
                  
                  
                  if (f != null) {
                      lbPath.setText(f.getPath());
-                     cImg = new CodageFichierImg(f);
+                     cImg = new CodageFichierBin(f);
                      cImg.init();
                      cImg.codage();
                      cImg.decodage();

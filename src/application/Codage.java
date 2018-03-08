@@ -1,5 +1,13 @@
 package application;
 
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import javafx.beans.property.ReadOnlyDoubleProperty;
@@ -7,6 +15,8 @@ import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.concurrent.Task;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Codage{
 
@@ -54,68 +64,72 @@ public class Codage{
         this.stringToArray(this.contentASCII,this.content);
         
         //Génération de la clef de codage
-        this.generateKey();
+        this.generateKey(this.cartes);
 	}
+                
+        public void initDecodageDistance(String filename){
+            this.setDeckFromFile(filename, this.cartesDec);
+        }
 
-    public void etape1(){
-        int idx = this.cartes.indexOf(JN);
+    public void etape1(ArrayList<Integer> deck){
+        int idx = deck.indexOf(JN);
 
-        this.cartes.remove(idx);
+        deck.remove(idx);
         if(idx == 53)
-            this.cartes.add(1, JN);
+            deck.add(1, JN);
         else
-            this.cartes.add(idx+1,JN);
+            deck.add(idx+1,JN);
         //System.out.println(cartes.toString());
     }
 
-    public void etape2(){
-        int idx = this.cartes.indexOf(JR);
+    public void etape2(ArrayList<Integer> deck){
+        int idx = deck.indexOf(JR);
 
-        this.cartes.remove(idx);
+        deck.remove(idx);
         if(idx == 53){
-            this.cartes.add(2, JR);
+            deck.add(2, JR);
         }else if(idx == 52)
-            this.cartes.add(1, JR);
+            deck.add(1, JR);
         else
-            this.cartes.add(idx+2, JR);
+            deck.add(idx+2, JR);
         //System.out.println(cartes.toString());
     }
 
-    public void etape3(){
-        int idxJR = this.cartes.indexOf(JR);
-        int idxJN = this.cartes.indexOf(JN);
+    public void etape3(ArrayList<Integer> deck){
+        int idxJR = deck.indexOf(JR);
+        int idxJN = deck.indexOf(JN);
 
         int idx1 = idxJR < idxJN ? idxJR : idxJN;
         int idx2 = idxJR > idxJN ? idxJR : idxJN;
 
-        List<Integer> split2 = this.cartes.subList(idx2+1, this.cartes.size());
+        List<Integer> split2 = deck.subList(idx2+1, deck.size());
         ArrayList<Integer> split2Cp = new ArrayList(split2);
         split2.clear();
-        List<Integer> split1 = this.cartes.subList(0, idx1);
+        List<Integer> split1 = deck.subList(0, idx1);
         ArrayList<Integer> split1Cp = new ArrayList(split1);
         split1.clear();
 
-        this.cartes.addAll(split1Cp);
-        this.cartes.addAll(0, split2Cp);
+        deck.addAll(split1Cp);
+        deck.addAll(0, split2Cp);
         //System.out.println(cartes.toString());
     }
 
-    public void etape4(){
-        int val = this.cartes.get(this.cartes.size() - 1);
+    public void etape4(ArrayList<Integer> deck){
+        int val = deck.get(deck.size() - 1);
 
-        List<Integer> split = this.cartes.subList(0, val-1);
+        List<Integer> split = deck.subList(0, val-1);
         ArrayList<Integer> splitCp = new ArrayList(split);
         split.clear();
-        this.cartes.addAll(this.cartes.size()-1,splitCp);
+        deck.addAll(deck.size()-1,splitCp);
         //System.out.println(cartes.toString());
     }
 
-    public int etape5(){
-        int val = this.cartes.get(0);
-        int valeur = this.cartes.get(val-1);
+    public int etape5(ArrayList<Integer> deck){
+        int val = deck.get(0);
+        int valeur = deck.get(val-1);
         int res = 0;
         if(valeur == JR || valeur == JN)
-            valeur = operationsFluxClef();
+            valeur = operationsFluxClef(deck);
 
 
         if(valeur > NBCHARS)
@@ -126,17 +140,17 @@ public class Codage{
         return res;
     }
 
-    public int operationsFluxClef(){
-        etape1();
-        etape2();
-        etape3();
-        etape4();
-       return etape5();
+    public int operationsFluxClef(ArrayList<Integer> deck){
+        etape1(deck);
+        etape2(deck);
+        etape3(deck);
+        etape4(deck);
+       return etape5(deck);
     }
-
-    public void generateKey(){
+    
+    public void generateKey(ArrayList<Integer> deck){
     	for(int i = 0; i < this.contentASCII.size(); i++)
-    		this.clef.add(this.operationsFluxClef());
+    		this.clef.add(this.operationsFluxClef(deck));
     }
 
     public void stringToArray(ArrayList<Integer> array,String message){
@@ -233,7 +247,52 @@ public class Codage{
         this.result = this.arrayToString(this.mDecode);
     }
     
+    public void saveDeck(String filename){
+        PrintWriter writer;
+        try {
+            writer = new PrintWriter(filename+"_deck.txt", "UTF-8");
+            writer.print(this.cartes.toString());
+            writer.close();
+        } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
     
+    public void setDeckFromFile(String filename, ArrayList<Integer> array){
+        BufferedReader reader = null;
+        try {
+            reader = Files.newBufferedReader(Paths.get(filename + "_deck.txt"), StandardCharsets.UTF_8);
+            String line;
+            String data = "";
+            while ((line = reader.readLine()) != null) {
+                data += line +"\n";
+            }
+            String[] numbers = data.split("\\[")[1].split(",");
+            for(int i = 1; i < numbers.length; i++){
+                StringBuilder temp = new StringBuilder(numbers[i]);
+                temp.deleteCharAt(0);
+                numbers[i] = temp.toString();
+            }
+            numbers[numbers.length-1] = numbers[numbers.length-1].substring(0,numbers[numbers.length-1].length()-2);
+
+            for(int i = 0; i < numbers.length; i++)
+                array.add(Integer.parseUnsignedInt(numbers[i]));
+
+                System.out.println("Cartes : " + array);
+        } catch (IOException ex) {
+            Logger.getLogger(Codage.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                reader.close();
+            } catch (IOException ex) {
+                Logger.getLogger(Codage.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
 
     public double getProgress() {
         return progressProperty().get();

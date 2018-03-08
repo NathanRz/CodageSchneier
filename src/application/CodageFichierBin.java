@@ -7,11 +7,13 @@ package application;
 
 import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
@@ -25,13 +27,12 @@ import javax.imageio.ImageIO;
  *
  * @author legol
  */
-public class CodageFichierImg extends Codage{
+public class CodageFichierBin extends Codage{
 
     private final String filename;
     private final String extension;
-    private StringBuilder test;
     
-    public CodageFichierImg(File f) {
+    public CodageFichierBin(File f) {
         super("");
         // TODO Auto-generated constructor stub
         this.filename = f.getName().lastIndexOf(".") > 0 ? f.getName().substring(0, f.getName().lastIndexOf(".")) : "";
@@ -39,11 +40,11 @@ public class CodageFichierImg extends Codage{
         this.NBCHARS = 32;
         try {
             byte[] b = Files.readAllBytes(Paths.get(f.getPath()));
-            test = new StringBuilder();
+            StringBuilder imgBin = new StringBuilder();
             for(byte bn : b){
-                test.append(String.format("%8s", Integer.toBinaryString(bn & 0xFF)).replace(' ', '0'));
+                imgBin.append(String.format("%8s", Integer.toBinaryString(bn & 0xFF)).replace(' ', '0'));
             }
-            super.setContent(convertBinToLetters(test.toString()).toUpperCase());
+            super.setContent(convertBinToLetters(imgBin.toString()).toUpperCase());
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -132,6 +133,8 @@ public class CodageFichierImg extends Codage{
     }
         
     public void saveImgToFile(){
+        saveDeck(filename);
+        setDeckFromFile(filename, this.cartes);
         String binFin = convertLetterToBin(this.result);
         
         byte[] data = new byte[binFin.length()/8 -1];
@@ -139,16 +142,22 @@ public class CodageFichierImg extends Codage{
             int val = Integer.parseInt(binFin.substring(i*8,(i*8)+8),2);
             data[i] = (byte) val;
         }
-        BufferedImage res = null;
-            try{
-                res = ImageIO.read(new ByteArrayInputStream(data));
-                File outputfile = new File(this.filename + "_decode." + this.extension);
-                ImageIO.write(res, this.extension, outputfile);
+        OutputStream out = null;
 
-
-            }catch(IOException e){
-                e.printStackTrace();
+        try {
+            out = new BufferedOutputStream(new FileOutputStream(this.filename + "_decode." + this.extension));
+            out.write(data);
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(CodageFichierBin.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(CodageFichierBin.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            if (out != null) try {
+                out.close();
+            } catch (IOException ex) {
+                Logger.getLogger(CodageFichierBin.class.getName()).log(Level.SEVERE, null, ex);
             }
+        }
 
     }
 }
