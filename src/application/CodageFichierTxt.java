@@ -25,7 +25,7 @@ public class CodageFichierTxt extends Codage{
 	          String line;
 	          String content = "";
 	            while ((line = reader.readLine()) != null) {
-	            	//marche pas toujours codé par 35
+	            	//marche pas toujours codÃ© par 35
 	                content += line +"\n";
 	            }
 			//String content = new String(Files.readAllBytes(Paths.get(f.getPath())));

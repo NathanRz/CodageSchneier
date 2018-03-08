@@ -132,7 +132,6 @@ public class Main extends Application{
                  lbCodage.setText(c.getMessageCode());
                  lbCleDec.setText(c.getCleStr());
                  lbDecodage.setText(c.getMessageDecode());
-                 System.out.println("\\");
              }
          });
          chooseFile.setOnAction(new EventHandler<ActionEvent>() {
@@ -220,7 +219,6 @@ public class Main extends Application{
                      cImg.init();
                      cImg.codage();
                      cImg.decodage();
-                     System.out.println(cImg.getMessageCode());
                      cImg.saveImgToFile();
                      
                      /*coder.setDisable(false);

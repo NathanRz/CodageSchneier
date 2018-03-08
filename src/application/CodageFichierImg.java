@@ -10,6 +10,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
@@ -28,6 +29,7 @@ public class CodageFichierImg extends Codage{
 
     private final String filename;
     private final String extension;
+    private StringBuilder test;
     
     public CodageFichierImg(File f) {
         super("");
@@ -37,11 +39,11 @@ public class CodageFichierImg extends Codage{
         this.NBCHARS = 32;
         try {
             byte[] b = Files.readAllBytes(Paths.get(f.getPath()));
-            StringBuilder imgBin = new StringBuilder();
+            test = new StringBuilder();
             for(byte bn : b){
-                imgBin.append(String.format("%8s", Integer.toBinaryString(bn & 0xFF)).replace(' ', '0'));
+                test.append(String.format("%8s", Integer.toBinaryString(bn & 0xFF)).replace(' ', '0'));
             }
-            super.setContent(convertBinToLetters(imgBin.toString()).toUpperCase());
+            super.setContent(convertBinToLetters(test.toString()).toUpperCase());
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -70,13 +72,11 @@ public class CodageFichierImg extends Codage{
     }
      
     public static String convertLetterToBin(String str){
-        System.out.println("JE RENTRE");
         StringBuilder res = new StringBuilder();
         for(int i = 0; i < str.length(); i++){
             int current = (int)(str.charAt(i) - 'A');
             StringBuilder number = new StringBuilder(Integer.toBinaryString(current));
-            while(number.length() != 5 && i == str.length() -1){
-                System.out.println("J'ajoute");
+            while(number.length() != 5 && i != str.length() -1){
                 number.insert(0, "0");
             }
             
@@ -130,31 +130,25 @@ public class CodageFichierImg extends Codage{
 
         return message;
     }
-    
+        
     public void saveImgToFile(){
-        System.out.println("Result : " + this.result);
         String binFin = convertLetterToBin(this.result);
-        System.out.println("TEST");
-        int idx = 0;
-        System.out.println(this.content.equals(this.result.length())) ;
-        while(result.charAt(idx) == this.content.charAt(idx) || idx < result.length())
-            idx++;
-        System.out.println("idx" + idx);
-        //System.out.println(result.charAt(idx) +" "+ content.charAt(idx));
+        
         byte[] data = new byte[binFin.length()/8 -1];
         for(int i = 0; i < data.length - 1; i++){
-            int val = Integer.parseInt(binFin.substring(i*8,(i+1)*8));
+            int val = Integer.parseInt(binFin.substring(i*8,(i*8)+8),2);
             data[i] = (byte) val;
         }
-        try {
-            BufferedImage bImg = ImageIO.read(new ByteArrayInputStream(data));
-            File outputfile = new File(this.filename + "_decode" + this.extension);
-            ImageIO.write(bImg, this.extension, outputfile);
-        } catch (IOException ex) {
-            Logger.getLogger(CodageFichierImg.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-        
-        
+        BufferedImage res = null;
+            try{
+                res = ImageIO.read(new ByteArrayInputStream(data));
+                File outputfile = new File(this.filename + "_decode." + this.extension);
+                ImageIO.write(res, this.extension, outputfile);
+
+
+            }catch(IOException e){
+                e.printStackTrace();
+            }
+
     }
 }
