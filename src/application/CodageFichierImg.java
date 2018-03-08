@@ -5,6 +5,9 @@
  */
 package application;
 
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -13,6 +16,9 @@ import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.imageio.ImageIO;
 
 /**
  *
@@ -27,16 +33,15 @@ public class CodageFichierImg extends Codage{
         super("");
         // TODO Auto-generated constructor stub
         this.filename = f.getName().lastIndexOf(".") > 0 ? f.getName().substring(0, f.getName().lastIndexOf(".")) : "";
-        this.extension = f.getName().lastIndexOf(".") > 0? f.getName().substring(f.getName().lastIndexOf(".")+1) : "";
-        System.out.print(this.extension);
+        this.extension = f.getName().lastIndexOf(".") > 0? f.getName().substring(f.getName().lastIndexOf(".")+1).toLowerCase() : "";
+        this.NBCHARS = 32;
         try {
             byte[] b = Files.readAllBytes(Paths.get(f.getPath()));
             StringBuilder imgBin = new StringBuilder();
             for(byte bn : b){
                 imgBin.append(String.format("%8s", Integer.toBinaryString(bn & 0xFF)).replace(' ', '0'));
             }
-            
-            super.setContent(convertLetterToBin(result).toUpperCase());
+            super.setContent(convertBinToLetters(imgBin.toString()).toUpperCase());
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
@@ -65,47 +70,91 @@ public class CodageFichierImg extends Codage{
     }
      
     public static String convertLetterToBin(String str){
+        System.out.println("JE RENTRE");
         StringBuilder res = new StringBuilder();
         for(int i = 0; i < str.length(); i++){
             int current = (int)(str.charAt(i) - 'A');
             StringBuilder number = new StringBuilder(Integer.toBinaryString(current));
-            while(number.length() != 5 && i != str.length() -1){
+            while(number.length() != 5 && i == str.length() -1){
+                System.out.println("J'ajoute");
                 number.insert(0, "0");
             }
             
             res.append(number);
-        }
-        
-        
+        }        
         return res.toString();
     }
-    /* public static ArrayList<Integer> stringToArray(String message){
+    
+    @Override
+    public void stringToArray(ArrayList<Integer> array, String message){
         int lg = message.length();
-        ArrayList<Integer> array = new ArrayList(lg);
-
         for(int i = 0; i < lg; i++){
-            if(message.charAt(i) == 32 ) //Ici on code l'espace
+            if(message.charAt(i) == 91 ) // [
                 array.add(27);
-            else if(message.charAt(i) == 39) // On code l'apostrophe
+            else if(message.charAt(i) == 92) // \
                 array.add(28);
-            else if(message.charAt(i) == 46) // Point
+            else if(message.charAt(i) == 93) // ]
                 array.add(29);
-            else if(message.charAt(i) == 44) // Virgule
+            else if(message.charAt(i) == 94) // ^
                 array.add(30);
-            else if(message.charAt(i) == 33) // Point d'exclamation
+            else if(message.charAt(i) == 95) // _
                 array.add(31);
-            else if(message.charAt(i) == 63) // Point d'interrogation
+            else if(message.charAt(i) == 96) // `
                 array.add(32);
-            else if(message.charAt(i) == 58) // Deux points
-                array.add(33);
-            else if(message.charAt(i) == 59) // Point virgule
-                array.add(34);
-            else if(message.charAt(i) == 10) //On code le retour a la ligne
-                array.add(35);
             else
                 array.add(((int) message.charAt(i)) - 64);
         }
+    }
+    
+    @Override
+    public String arrayToString(ArrayList<Integer> array){
+        int lg = array.size();
+        String message = "";
 
-        return array;
-    }*/
+        for(int i = 0; i < lg; i++){
+            if(array.get(i) == 27)
+                message += "[";
+            else if(array.get(i) == 28)
+                message += "\\";
+            else if(array.get(i) == 29)
+                message += "]";
+            else if(array.get(i) == 30)
+                message += "^";
+            else if(array.get(i) == 31)
+                message += "_";
+            else if(array.get(i) == 0)
+                message += "`";
+            else
+                message += (char) (array.get(i) + 64);
+       }
+
+        return message;
+    }
+    
+    public void saveImgToFile(){
+        System.out.println("Result : " + this.result);
+        String binFin = convertLetterToBin(this.result);
+        System.out.println("TEST");
+        int idx = 0;
+        System.out.println(this.content.equals(this.result.length())) ;
+        while(result.charAt(idx) == this.content.charAt(idx) || idx < result.length())
+            idx++;
+        System.out.println("idx" + idx);
+        //System.out.println(result.charAt(idx) +" "+ content.charAt(idx));
+        byte[] data = new byte[binFin.length()/8 -1];
+        for(int i = 0; i < data.length - 1; i++){
+            int val = Integer.parseInt(binFin.substring(i*8,(i+1)*8));
+            data[i] = (byte) val;
+        }
+        try {
+            BufferedImage bImg = ImageIO.read(new ByteArrayInputStream(data));
+            File outputfile = new File(this.filename + "_decode" + this.extension);
+            ImageIO.write(bImg, this.extension, outputfile);
+        } catch (IOException ex) {
+            Logger.getLogger(CodageFichierImg.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        
+        
+    }
 }

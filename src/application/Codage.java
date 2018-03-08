@@ -21,7 +21,7 @@ public class Codage{
 	protected String result;
 	protected final int JN = 53;
 	protected final int JR = 54;
-	protected final int NBCHARS = 35;
+	protected int NBCHARS = 35;
 	private final ReadOnlyDoubleWrapper progress = new ReadOnlyDoubleWrapper();
 
 	public Codage(String content){
@@ -167,7 +167,7 @@ public class Codage{
         
     }
 
-    public static String arrayToString( ArrayList<Integer> array){
+    public String arrayToString(ArrayList<Integer> array){
         int lg = array.size();
         String message = "";
 
@@ -211,9 +211,8 @@ public class Codage{
            progress.set(1.0*i / 100);
            this.mCode.add(val);
         }
-        System.out.println(this.contentASCII);
-        	System.out.println(this.mCode);
-        this.mCodeStr = Codage.arrayToString(this.mCode);
+
+        this.mCodeStr = this.arrayToString(this.mCode);
     }
 
     public void decodage(){
@@ -233,7 +232,7 @@ public class Codage{
             this.mDecode.add(val);
         }
 
-        this.result = Codage.arrayToString(this.mDecode);
+        this.result = this.arrayToString(this.mDecode);
     }
     
     
@@ -255,7 +254,7 @@ public class Codage{
     }
 
     public String getCleStr(){
-    	return Codage.arrayToString(this.clef);
+    	return this.arrayToString(this.clef);
     }
 
     public void setContent(String content){

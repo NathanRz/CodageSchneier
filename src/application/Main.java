@@ -27,6 +27,7 @@ import javafx.concurrent.Task;
 public class Main extends Application{
 	static ProgressBar pb = new ProgressBar();
 	static CodageFichierTxt c;
+        static CodageFichierImg cImg;
 	public static void main(String[] args) {
         Application.launch(args);
     }
@@ -50,6 +51,9 @@ public class Main extends Application{
 
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open Resource File");
+        
+        FileChooser imgChooser = new FileChooser();
+        imgChooser.setTitle("Choisir une image");
 
         Label lbMessDecCle = new Label("Cl√© de d√©codage : ");
         Label lbMessDec = new Label("Message d√©cod√© : ");
@@ -58,7 +62,8 @@ public class Main extends Application{
         Label lbPath = new Label();
         Label infoState = new Label();
         Button submit = new Button("Encrypter");
-        Button chooseFile = new Button("SÈlectionner un fichier");
+        Button chooseFile = new Button("S√©lectionner un fichier");
+        Button chooseImg = new Button("S√©lectionner une image");
         Button coder = new Button("Coder");
         coder.setDisable(true);
         Button decoder = new Button("Decoder");
@@ -71,6 +76,7 @@ public class Main extends Application{
         TabPane tabPane = new TabPane();
         Tab tab = new Tab("Champ de texte");
         Tab tabFile = new Tab("Fichier");
+        Tab tabImg = new Tab("Image");
 
 
         pb.prefWidthProperty().bind(scene.heightProperty());
@@ -83,6 +89,7 @@ public class Main extends Application{
 
         VBox box = new VBox(textBox, submit, cleBox, messCodBox, cleDecBox, messDecBox);
         VBox boxFile = new VBox(pb,lbPath,btns,infoState);
+        VBox boxImg = new VBox(chooseImg);
         box.setPadding(new Insets(10,10,10,10));
         box.setSpacing(10);
         box.prefHeightProperty().bind(scene.heightProperty());
@@ -91,11 +98,17 @@ public class Main extends Application{
         boxFile.setSpacing(10);
         boxFile.prefHeightProperty().bind(scene.heightProperty());
         boxFile.prefWidthProperty().bind(scene.widthProperty());
+        boxImg.setPadding(new Insets(10));
+        boxImg.setSpacing(10);
+        boxImg.prefHeightProperty().bind(scene.heightProperty());
+        boxImg.prefWidthProperty().bind(scene.widthProperty());
         tab.setContent(box);
         tabFile.setContent(boxFile);
+        tabImg.setContent(boxImg);
         tabPane.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
         tabPane.getTabs().add(tab);
         tabPane.getTabs().add(tabFile);
+        tabPane.getTabs().add(tabImg);
         borderPane.setCenter(tabPane);
 
         root.getChildren().add(borderPane);
@@ -119,6 +132,7 @@ public class Main extends Application{
                  lbCodage.setText(c.getMessageCode());
                  lbCleDec.setText(c.getCleStr());
                  lbDecodage.setText(c.getMessageDecode());
+                 System.out.println("\\");
              }
          });
          chooseFile.setOnAction(new EventHandler<ActionEvent>() {
@@ -161,7 +175,7 @@ public class Main extends Application{
 						Platform.runLater(new Runnable() {
 						    @Override
 						    public void run() {
-						    	infoState.setText("Fichier codÈ avec succËs !");
+						    	infoState.setText("Fichier cod√© avec succ√©s !");
 						    }
 						});
 						return null;
@@ -185,12 +199,36 @@ public class Main extends Application{
 				c.decodage();
 				c.saveDecodeToFile();
 				
-				infoState.setText("Fichier dÈcodÈ avec succËs !");
+				infoState.setText("Fichier d√©cod√© avec succ√©s !");
 				
  			}
          	 
          	 
           });
+         
+         chooseImg.setOnAction(new EventHandler<ActionEvent>() {
+             public void handle(ActionEvent event) {
+            	 /*FileChooser.ExtensionFilter extFilter = 
+                         new FileChooser.ExtensionFilter("TEXT files (*.txt)", "*.txt");
+                 fileChooser.getExtensionFilters().add(extFilter);*/
+                 File f = fileChooser.showOpenDialog(primaryStage);
+                 
+                 
+                 if (f != null) {
+                     lbPath.setText(f.getPath());
+                     cImg = new CodageFichierImg(f);
+                     cImg.init();
+                     cImg.codage();
+                     cImg.decodage();
+                     System.out.println(cImg.getMessageCode());
+                     cImg.saveImgToFile();
+                     
+                     /*coder.setDisable(false);
+                     decoder.setDisable(false);*/
+                 }
+                 
+             }
+         });
          
          primaryStage.show();
     }
