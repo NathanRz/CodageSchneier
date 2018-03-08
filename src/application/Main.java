@@ -143,11 +143,13 @@ public class Main extends Application{
                  
                  
                  if (f != null) {
-                     lbPath.setText(f.getPath());
+                	 
                      c = new CodageFichierTxt(f);
                      c.init();
+                     System.out.println();
                      coder.setDisable(false);
                      decoder.setDisable(false);
+                     lbPath.setText(f.getPath());
                  }
                  
              }
@@ -166,7 +168,6 @@ public class Main extends Application{
 		
 						c.progressProperty().addListener((obs, oldProgress, newProgress) 
 						->updateProgress(newProgress.doubleValue(), 1));
-						    
 						
 						c.codage();
 						c.saveCodeToFile();
@@ -180,7 +181,6 @@ public class Main extends Application{
 						return null;
 					}
 				};
-				
 				
 				Thread th = new Thread(task);
 				th.start();

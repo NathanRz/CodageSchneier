@@ -18,26 +18,20 @@ public class CodageFichierTxt extends Codage{
 		super("");
 		// TODO Auto-generated constructor stub
 		this.filename = f.getName().lastIndexOf(".") > 0 ? f.getName().substring(0, f.getName().lastIndexOf(".")) : "";
+		
+		BufferedReader reader;
 		try {
-			
-			BufferedReader reader = Files.newBufferedReader(Paths.get(f.getPath()), StandardCharsets.UTF_8);
-
-	          String line;
-	          String content = "";
-	            while ((line = reader.readLine()) != null) {
-	            	//marche pas toujours codé par 35
-	                content += line +"\n";
-	            }
-			//String content = new String(Files.readAllBytes(Paths.get(f.getPath())));
-			
-			for(int i = 0; i < content.length(); i++)
-				System.out.print(content.charAt(i));
-			super.setContent(content.toUpperCase());
-		} catch (IOException e) {
+			reader = Files.newBufferedReader(Paths.get(f.getPath()), StandardCharsets.UTF_8);
+			StringBuilder content = new StringBuilder(); 
+			char[] buffer = new char[256];
+			int readChars;
+			while ((readChars = reader.read(buffer, 0, 256)) > 0)
+			    content.append(buffer, 0, readChars);
+			super.setContent(content.toString().toUpperCase());
+		}catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 	}
 
 	public void saveCodeToFile(){

@@ -47,14 +47,14 @@ public class Codage{
         }
 
         Collections.copy(cartesDec,cartes);
-
-        //Génération de la clef de codage
-
-        this.generateKey();
+       
 
         //Génération de la liste des caractères correspondant au message au format ASCII
 
         this.stringToArray(this.contentASCII,this.content);
+        
+        //Génération de la clef de codage
+        this.generateKey();
 	}
 
     public void etape1(){
@@ -135,14 +135,15 @@ public class Codage{
     }
 
     public void generateKey(){
-    	for(int i = 0; i < content.length(); i++)
+    	for(int i = 0; i < this.contentASCII.size(); i++)
     		this.clef.add(this.operationsFluxClef());
     }
 
     public void stringToArray(ArrayList<Integer> array,String message){
         int lg = message.length();
-
+       
         for(int i = 0; i < lg; i++){
+        	
             if(message.charAt(i) == 32 ) //Ici on code l'espace
                 array.add(27);
             else if(message.charAt(i) == 39) // On code l'apostrophe
@@ -161,7 +162,12 @@ public class Codage{
                 array.add(34);
             else if(message.charAt(i) == 10) //On code le retour a la ligne
                 array.add(35);
-            else
+            else if(message.charAt(i) == 13) {
+            	if(i != lg-1 && message.charAt(i+1) == 10) {
+            		array.add(35);
+            		i++;
+            	}
+            }else
                 array.add(((int) message.charAt(i)) - 64);
         }
         
@@ -170,7 +176,6 @@ public class Codage{
     public String arrayToString(ArrayList<Integer> array){
         int lg = array.size();
         String message = "";
-
         for(int i = 0; i < lg; i++){
             if(array.get(i) == 27 )
                 message += " ";
@@ -199,20 +204,17 @@ public class Codage{
 
     public void codage(){
 
-        int lg = this.content.length();
+        int lg = this.contentASCII.size();
         progress.set(0);
         int val;
         for(int i =0; i < lg; i++){
-
-           /*if(code.get(i) == -32 || code.get(i) == -54)
-               val = code.get(i);
-           else*/
            val = ((this.contentASCII.get(i) + this.clef.get(i)) % NBCHARS) + 1;
            progress.set(1.0*i / 100);
            this.mCode.add(val);
         }
 
         this.mCodeStr = this.arrayToString(this.mCode);
+        //System.out.println("Code "+ this.mCodeStr);
     }
 
     public void decodage(){
@@ -220,15 +222,11 @@ public class Codage{
         
         int val;
         for(int i =0; i < lg; i++){
-            /*if((messageCode.get(i) == -32) || (messageCode.get(i) == -54))
-                val = messageCode.get(i);
-            else{*/
             val = (this.mCode.get(i) - this.clef.get(i)) % NBCHARS -1;
             if(val < 0){
                 val += NBCHARS;
             }
-            //}
-
+      
             this.mDecode.add(val);
         }
 
