@@ -27,7 +27,7 @@ import javafx.concurrent.Task;
 public class Main extends Application{
 	static ProgressBar pb = new ProgressBar();
 	static CodageFichierTxt c;
-        static CodageFichierBin cImg;
+    static CodageFichierBin cImg;
 	public static void main(String[] args) {
         Application.launch(args);
     }
@@ -117,8 +117,6 @@ public class Main extends Application{
         root.getChildren().add(borderPane);
 
         primaryStage.setScene(scene);
-        
-        File f = null;
 
         /*
          * Events
@@ -128,9 +126,9 @@ public class Main extends Application{
 
              public void handle(ActionEvent event) {
                  Codage c = new Codage(mcode.getText());
-                 c.init(null);
+                 c.init();
                  c.codage();
-                 c.decodage(null);
+                 c.decodage();
                  lbCle.setText(c.getCleStr());
                  lbCodage.setText(c.getMessageCode());
                  lbCleDec.setText(c.getCleStr());
@@ -148,7 +146,7 @@ public class Main extends Application{
                  if (f != null) {
                 	 
                      c = new CodageFichierTxt(f);
-                     c.init(f.getName());
+                     c.init();
                      System.out.println();
                      coder.setDisable(false);
                      decoder.setDisable(false);
@@ -197,15 +195,35 @@ public class Main extends Application{
          decoder.setOnAction(new EventHandler<ActionEvent>() {
  			@Override
  			public void handle(ActionEvent arg0) {
-                            FileChooser.ExtensionFilter extFilter = 
-                                    new FileChooser.ExtensionFilter("TEXT files (*.txt)", "*.txt");
-                            File f = fileChooserDeck.showOpenDialog(primaryStage);
-                            System.out.println("Main " + f.getPath());
-                            c.decodage(f.getName());
-                            c.saveDecodeToFile();
-
-                            infoState.setText("Fichier décodé avec succés !");
-				
+                FileChooser.ExtensionFilter extFilter = 
+                      new FileChooser.ExtensionFilter("TEXT files (*.txt)", "*.txt");
+                File f = fileChooserDeck.showOpenDialog(primaryStage);
+                
+                c.setFname(f.getName());
+                Task<Void> task = new Task<Void>() {
+					@Override protected Void call() throws Exception {
+						pb.progressProperty().unbind();
+						pb.progressProperty().bind(c.progressProperty());
+						
+		
+						c.progressProperty().addListener((obs, oldProgress, newProgress) 
+						->updateProgress(newProgress.doubleValue(), 1));
+						
+						c.decodage();
+		                c.saveDecodeToFile();
+						
+						Platform.runLater(new Runnable() {
+						    @Override
+						    public void run() {
+						    	infoState.setText("Fichier d�codé avec succés !");
+						    }
+						});
+						return null;
+					}
+				};
+               
+				Thread th = new Thread(task);
+				th.start();
  			}
          	 
          	 
@@ -222,9 +240,9 @@ public class Main extends Application{
                  if (f != null) {
                      lbPath.setText(f.getPath());
                      cImg = new CodageFichierBin(f);
-                     cImg.init(f.getPath());
+                     cImg.init();
                      cImg.codage();
-                     cImg.decodage(f.getName());
+                     cImg.decodage();
                      cImg.saveImgToFile();
                      
                      /*coder.setDisable(false);

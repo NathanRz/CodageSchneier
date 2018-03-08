@@ -14,7 +14,9 @@ import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.concurrent.Task;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -29,6 +31,7 @@ public class Codage{
     protected ArrayList<Integer> mDecode;
     protected String mCodeStr;
     protected String result;
+    protected String fname;
     protected final int JN = 53;
     protected final int JR = 54;
     protected int NBCHARS = 35;
@@ -44,21 +47,13 @@ public class Codage{
             this.cartesDec = new ArrayList<Integer>();
     }
 
-    public void init(String filename){
+    public void init(){
         //Initialisation des cartes.
         for(int i = 1; i <= 54;i++){
             cartes.add(i);
         }
 
         Collections.shuffle(cartes);
-                    
-
-       /* for(int i = 0; i < cartes.size(); i ++){
-            cartesDec.add(0);
-        }*/
-
-        //Collections.copy(cartesDec,cartes);
-
 
         //Génération de la liste des caractères correspondant au message au format ASCII
 
@@ -66,8 +61,8 @@ public class Codage{
 
         //Génération de la clef de codage
         
-        if(filename != null){
-            saveDeck(filename);
+        if(this.fname != null){
+            saveDeck(this.fname);
             this.generateKey(this.cartes);
         }else{
             ArrayList<Integer> temp = new ArrayList(this.cartes);           
@@ -164,9 +159,9 @@ public class Codage{
 
     public void stringToArray(ArrayList<Integer> array,String message){
         int lg = message.length();
-       
+        progress.set(0);
         for(int i = 0; i < lg; i++){
-        	
+        	progress.set(1.0*i / lg);
             if(message.charAt(i) == 32 ) //Ici on code l'espace
                 array.add(27);
             else if(message.charAt(i) == 39) // On code l'apostrophe
@@ -197,57 +192,51 @@ public class Codage{
     }
 
     public String arrayToString(ArrayList<Integer> array){
+    	Map<Integer,String> m = new HashMap<>();
+    	m.put(0, "\r\n");
+    	for(int i = 1; i < 27; i++)
+    		m.put(i, ""+(char)(i+64));
+    	
+    	m.put(27, " ");
+    	m.put(28, "'");
+    	m.put(29, ".");
+    	m.put(30, ",");
+    	m.put(31, "!");
+    	m.put(32, "?");
+    	m.put(33, ":");
+    	m.put(34, ";");
+    	
+    	
+    	progress.set(0);
         int lg = array.size();
-        String message = "";
+        StringBuilder message = new StringBuilder(); 
+        
         for(int i = 0; i < lg; i++){
-            if(array.get(i) == 27 )
-                message += " ";
-            else if(array.get(i) == 28)
-                message += "'";
-            else if(array.get(i) == 29)
-                message += ".";
-            else if(array.get(i) == 30)
-                message += ",";
-            else if(array.get(i) == 31)
-                message += "!";
-            else if(array.get(i) == 32)
-                message += "?";
-            else if(array.get(i) == 33)
-                message += ":";
-            else if(array.get(i) == 34)
-                message += ";";
-            else if(array.get(i) == 0)
-                message += "\r\n";
-            else
-                message += (char) (array.get(i) + 64);
+        	progress.set(1.0*i / lg);
+        	message.append(m.get(array.get(i)));
        }
 
-        return message;
+        return message.toString();
     }
 
     public void codage(){
 
         int lg = this.contentASCII.size();
-        progress.set(0);
         int val;
         for(int i =0; i < lg; i++){
            val = ((this.contentASCII.get(i) + this.clef.get(i)) % NBCHARS) + 1;
-           progress.set(1.0*i / 100);
            this.mCode.add(val);
         }
 
         this.mCodeStr = this.arrayToString(this.mCode);
-        //System.out.println("Code "+ this.mCodeStr);
-        
-        System.out.println("CLE CODAGE" + this.clef);
         this.clef.clear();
     }
 
-    public void decodage(String filename){
-        if(filename != null){
-            System.out.println("gooby " + filename);
-            setDeckFromFile(filename, this.cartesDec);
-            System.out.println("Generate key deck : " + this.cartesDec.toString());
+    public void decodage(){
+        if(this.fname != null){
+            
+            setDeckFromFile(this.fname, this.cartesDec);
+            
             generateKey(this.cartesDec);
             
         }
@@ -255,7 +244,7 @@ public class Codage{
             generateKey(this.cartes);
         
         int lg = this.mCode.size();
-        System.out.println("CLEF : "+ this.clef.toString());
+        
         
         int val;
         for(int i =0; i < lg; i++){
@@ -340,5 +329,9 @@ public class Codage{
 
     public void setContent(String content){
     	this.content = content;
+    }
+    
+    public void setFname(String fname) {
+    	this.fname = fname;
     }
 }

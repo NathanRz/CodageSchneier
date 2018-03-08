@@ -11,13 +11,12 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class CodageFichierTxt extends Codage{
-	private String filename;
 
 	public CodageFichierTxt(File f) {
 
 		super("");
 		// TODO Auto-generated constructor stub
-		this.filename = f.getName().lastIndexOf(".") > 0 ? f.getName().substring(0, f.getName().lastIndexOf(".")) : "";
+		this.fname = f.getName();
 		
 		BufferedReader reader;
 		try {
@@ -36,8 +35,9 @@ public class CodageFichierTxt extends Codage{
 
 	public void saveCodeToFile(){
 		PrintWriter writer;
+		String filename = this.fname.lastIndexOf(".") > 0 ? this.fname.substring(0,this.fname.lastIndexOf(".")).toLowerCase() + "_code.txt" : "";
 		try {
-			writer = new PrintWriter(filename+"_code.txt", "UTF-8");
+			writer = new PrintWriter(filename, "UTF-8");
 			writer.print(this.mCodeStr);
 	        writer.close();
 		} catch (FileNotFoundException e) {
@@ -52,8 +52,9 @@ public class CodageFichierTxt extends Codage{
 
 	public void saveDecodeToFile(){
 		PrintWriter writer;
+		String filename = this.fname.lastIndexOf(".") > 0 ? this.fname.substring(0,this.fname.lastIndexOf(".")-5).toLowerCase() + "_decode.txt" : "";
 		try {
-			writer = new PrintWriter(filename+"_decode.txt", "UTF-8");
+			writer = new PrintWriter(filename, "UTF-8");
 			writer.print(this.result);
 	        writer.close();
 		} catch (FileNotFoundException e) {
