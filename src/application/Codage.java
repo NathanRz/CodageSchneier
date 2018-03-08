@@ -20,56 +20,65 @@ import java.util.logging.Logger;
 
 public class Codage{
 
-	protected String content;
-	protected ArrayList<Integer> cartes;
-	protected ArrayList<Integer> cartesDec;
-	protected ArrayList<Integer> contentASCII;
-	protected ArrayList<Integer> mCode;
-	protected ArrayList<Integer> clef;
-	protected ArrayList<Integer> mDecode;
-	protected String mCodeStr;
-	protected String result;
-	protected final int JN = 53;
-	protected final int JR = 54;
-	protected int NBCHARS = 35;
-	private final ReadOnlyDoubleWrapper progress = new ReadOnlyDoubleWrapper();
+    protected String content;
+    protected ArrayList<Integer> cartes;
+    protected ArrayList<Integer> cartesDec;
+    protected ArrayList<Integer> contentASCII;
+    protected ArrayList<Integer> mCode;
+    protected ArrayList<Integer> clef;
+    protected ArrayList<Integer> mDecode;
+    protected String mCodeStr;
+    protected String result;
+    protected final int JN = 53;
+    protected final int JR = 54;
+    protected int NBCHARS = 35;
+    private final ReadOnlyDoubleWrapper progress = new ReadOnlyDoubleWrapper();
 
-	public Codage(String content){
-		this.content = content.toUpperCase();
-		this.cartes = new ArrayList<Integer>();
-		this.contentASCII = new ArrayList<Integer>();
-		this.mCode = new ArrayList<Integer>();
-		this.clef = new ArrayList<Integer>();
-		this.mDecode = new ArrayList<Integer>();
-		this.cartesDec = new ArrayList<Integer>();
+    public Codage(String content){
+            this.content = content.toUpperCase();
+            this.cartes = new ArrayList<Integer>();
+            this.contentASCII = new ArrayList<Integer>();
+            this.mCode = new ArrayList<Integer>();
+            this.clef = new ArrayList<Integer>();
+            this.mDecode = new ArrayList<Integer>();
+            this.cartesDec = new ArrayList<Integer>();
     }
 
-	public void init(){
-		//Initialisation des cartes.
-		for(int i = 1; i <= 54;i++){
+    public void init(String filename){
+        //Initialisation des cartes.
+        for(int i = 1; i <= 54;i++){
             cartes.add(i);
         }
 
         Collections.shuffle(cartes);
+                    
 
-        for(int i = 0; i < cartes.size(); i ++){
+       /* for(int i = 0; i < cartes.size(); i ++){
             cartesDec.add(0);
-        }
+        }*/
 
-        Collections.copy(cartesDec,cartes);
-       
+        //Collections.copy(cartesDec,cartes);
+
 
         //Génération de la liste des caractères correspondant au message au format ASCII
 
         this.stringToArray(this.contentASCII,this.content);
-        
+
         //Génération de la clef de codage
-        this.generateKey(this.cartes);
-	}
-                
-        public void initDecodageDistance(String filename){
-            this.setDeckFromFile(filename, this.cartesDec);
+        
+        if(filename != null){
+            saveDeck(filename);
+            this.generateKey(this.cartes);
+        }else{
+            ArrayList<Integer> temp = new ArrayList(this.cartes);           
+            this.generateKey(this.cartes);
+            this.cartes = new ArrayList<>(temp);
         }
+    }
+
+    public void initDecodageDistance(String filename){
+        this.setDeckFromFile(filename, this.cartesDec);
+    }
 
     public void etape1(ArrayList<Integer> deck){
         int idx = deck.indexOf(JN);
@@ -229,10 +238,24 @@ public class Codage{
 
         this.mCodeStr = this.arrayToString(this.mCode);
         //System.out.println("Code "+ this.mCodeStr);
+        
+        System.out.println("CLE CODAGE" + this.clef);
+        this.clef.clear();
     }
 
-    public void decodage(){
+    public void decodage(String filename){
+        if(filename != null){
+            System.out.println("gooby " + filename);
+            setDeckFromFile(filename, this.cartesDec);
+            System.out.println("Generate key deck : " + this.cartesDec.toString());
+            generateKey(this.cartesDec);
+            
+        }
+        else
+            generateKey(this.cartes);
+        
         int lg = this.mCode.size();
+        System.out.println("CLEF : "+ this.clef.toString());
         
         int val;
         for(int i =0; i < lg; i++){
@@ -250,22 +273,23 @@ public class Codage{
     public void saveDeck(String filename){
         PrintWriter writer;
         try {
-            writer = new PrintWriter(filename+"_deck.txt", "UTF-8");
+            String extension = filename.lastIndexOf(".") > 0? filename.substring(filename.lastIndexOf(".")).toLowerCase() : "";
+            filename = filename.lastIndexOf(".") > 0 ? filename.substring(0,filename.lastIndexOf(".")).toLowerCase() + "_deck" + extension : "";
+            writer = new PrintWriter(filename, "UTF-8");
             writer.print(this.cartes.toString());
             writer.close();
-        } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        } catch (UnsupportedEncodingException e) {
+        } catch (FileNotFoundException | UnsupportedEncodingException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+        // TODO Auto-generated catch block
+        
     }
     
     public void setDeckFromFile(String filename, ArrayList<Integer> array){
         BufferedReader reader = null;
         try {
-            reader = Files.newBufferedReader(Paths.get(filename + "_deck.txt"), StandardCharsets.UTF_8);
+            reader = Files.newBufferedReader(Paths.get(filename), StandardCharsets.UTF_8);
             String line;
             String data = "";
             while ((line = reader.readLine()) != null) {
@@ -279,10 +303,10 @@ public class Codage{
             }
             numbers[numbers.length-1] = numbers[numbers.length-1].substring(0,numbers[numbers.length-1].length()-2);
 
-            for(int i = 0; i < numbers.length; i++)
-                array.add(Integer.parseUnsignedInt(numbers[i]));
+            for (String number : numbers) {
+                array.add(Integer.parseUnsignedInt(number));
+            }
 
-                System.out.println("Cartes : " + array);
         } catch (IOException ex) {
             Logger.getLogger(Codage.class.getName()).log(Level.SEVERE, null, ex);
         } finally {

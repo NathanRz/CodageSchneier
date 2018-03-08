@@ -52,6 +52,9 @@ public class Main extends Application{
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open Resource File");
         
+        FileChooser fileChooserDeck = new FileChooser();
+        fileChooserDeck.setTitle("Choisir fichier clé");
+        
         FileChooser imgChooser = new FileChooser();
         imgChooser.setTitle("Choisir une image");
 
@@ -125,9 +128,9 @@ public class Main extends Application{
 
              public void handle(ActionEvent event) {
                  Codage c = new Codage(mcode.getText());
-                 c.init();
+                 c.init(null);
                  c.codage();
-                 c.decodage();
+                 c.decodage(null);
                  lbCle.setText(c.getCleStr());
                  lbCodage.setText(c.getMessageCode());
                  lbCleDec.setText(c.getCleStr());
@@ -145,7 +148,7 @@ public class Main extends Application{
                  if (f != null) {
                 	 
                      c = new CodageFichierTxt(f);
-                     c.init();
+                     c.init(f.getName());
                      System.out.println();
                      coder.setDisable(false);
                      decoder.setDisable(false);
@@ -167,8 +170,7 @@ public class Main extends Application{
 						
 		
 						c.progressProperty().addListener((obs, oldProgress, newProgress) 
-						->updateProgress(newProgress.doubleValue(), 1));
-						
+						->updateProgress(newProgress.doubleValue(), 1));						
 						c.codage();
 						c.saveCodeToFile();
 						
@@ -190,15 +192,19 @@ public class Main extends Application{
         	 
          });
          
+         
+         
          decoder.setOnAction(new EventHandler<ActionEvent>() {
-
  			@Override
  			public void handle(ActionEvent arg0) {
+                            FileChooser.ExtensionFilter extFilter = 
+                                    new FileChooser.ExtensionFilter("TEXT files (*.txt)", "*.txt");
+                            File f = fileChooserDeck.showOpenDialog(primaryStage);
+                            System.out.println("Main " + f.getPath());
+                            c.decodage(f.getName());
+                            c.saveDecodeToFile();
 
-				c.decodage();
-				c.saveDecodeToFile();
-				
-				infoState.setText("Fichier décodé avec succés !");
+                            infoState.setText("Fichier décodé avec succés !");
 				
  			}
          	 
@@ -216,9 +222,9 @@ public class Main extends Application{
                  if (f != null) {
                      lbPath.setText(f.getPath());
                      cImg = new CodageFichierBin(f);
-                     cImg.init();
+                     cImg.init(f.getPath());
                      cImg.codage();
-                     cImg.decodage();
+                     cImg.decodage(f.getName());
                      cImg.saveImgToFile();
                      
                      /*coder.setDisable(false);
