@@ -35,7 +35,7 @@ public class Codage{
     protected final int JN = 53;
     protected final int JR = 54;
     protected int NBCHARS = 35;
-    private final ReadOnlyDoubleWrapper progress = new ReadOnlyDoubleWrapper();
+    protected final ReadOnlyDoubleWrapper progress = new ReadOnlyDoubleWrapper();
 
     public Codage(String content){
             this.content = content.toUpperCase();
@@ -60,7 +60,6 @@ public class Codage{
         this.stringToArray(this.contentASCII,this.content);
 
         //Génération de la clef de codage
-        
         if(this.fname != null){
             saveDeck(this.fname);
             this.generateKey(this.cartes);
@@ -69,10 +68,6 @@ public class Codage{
             this.generateKey(this.cartes);
             this.cartes = new ArrayList<>(temp);
         }
-    }
-
-    public void initDecodageDistance(String filename){
-        this.setDeckFromFile(filename, this.cartesDec);
     }
 
     public void etape1(ArrayList<Integer> deck){
@@ -220,14 +215,12 @@ public class Codage{
     }
 
     public void codage(){
-
         int lg = this.contentASCII.size();
         int val;
         for(int i =0; i < lg; i++){
            val = ((this.contentASCII.get(i) + this.clef.get(i)) % NBCHARS) + 1;
            this.mCode.add(val);
         }
-
         this.mCodeStr = this.arrayToString(this.mCode);
         this.clef.clear();
     }
@@ -262,8 +255,7 @@ public class Codage{
     public void saveDeck(String filename){
         PrintWriter writer;
         try {
-            String extension = filename.lastIndexOf(".") > 0? filename.substring(filename.lastIndexOf(".")).toLowerCase() : "";
-            filename = filename.lastIndexOf(".") > 0 ? filename.substring(0,filename.lastIndexOf(".")).toLowerCase() + "_deck" + extension : "";
+            filename = filename.lastIndexOf(".") > 0 ? filename.substring(0,filename.lastIndexOf(".")).toLowerCase() + "_deck.txt" : "";
             writer = new PrintWriter(filename, "UTF-8");
             writer.print(this.cartes.toString());
             writer.close();
@@ -335,3 +327,51 @@ public class Codage{
     	this.fname = fname;
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

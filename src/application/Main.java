@@ -25,10 +25,13 @@ import javafx.stage.Stage;
 import javafx.concurrent.Task;
 
 public class Main extends Application{
-	static ProgressBar pb = new ProgressBar();
-	static CodageFichierTxt c;
-    static CodageFichierBin cImg;
-	public static void main(String[] args) {
+    
+    static ProgressBar pb = new ProgressBar();
+    static ProgressBar pbBin = new ProgressBar();
+    static CodageFichierTxt c;
+    static CodageFichierBin cBin;
+
+    public static void main(String[] args) {
         Application.launch(args);
     }
 
@@ -48,15 +51,19 @@ public class Main extends Application{
         Label lbCodage = new Label();
 
         pb.setProgress(0);
+        pbBin.setProgress(0);
 
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Open Resource File");
         
         FileChooser fileChooserDeck = new FileChooser();
-        fileChooserDeck.setTitle("Choisir fichier clé");
+        fileChooserDeck.setTitle("Choisir fichier cartes");
         
-        FileChooser imgChooser = new FileChooser();
-        imgChooser.setTitle("Choisir une image");
+        FileChooser binChooser = new FileChooser();
+        binChooser.setTitle("Choisir une image");
+        
+        FileChooser binChooserDeck = new FileChooser();
+        fileChooserDeck.setTitle("Choisir fichier cartes");
 
         Label lbMessDecCle = new Label("Clé de décodage : ");
         Label lbMessDec = new Label("Message décodé : ");
@@ -66,11 +73,15 @@ public class Main extends Application{
         Label infoState = new Label();
         Button submit = new Button("Encrypter");
         Button chooseFile = new Button("Sélectionner un fichier");
-        Button chooseImg = new Button("Sélectionner un fichier");
+        Button chooseBin = new Button("Sélectionner un fichier");
         Button coder = new Button("Coder");
         coder.setDisable(true);
         Button decoder = new Button("Decoder");
         decoder.setDisable(true);
+        Button coderBin = new Button("Coder");
+        coderBin.setDisable(true);
+        Button decoderBin = new Button("Décoder");
+        decoderBin.setDisable(true);
         Group root = new Group();
         Scene scene = new Scene(root, 500, 400, Color.GAINSBORO);
         BorderPane borderPane = new BorderPane();
@@ -83,16 +94,18 @@ public class Main extends Application{
 
 
         pb.prefWidthProperty().bind(scene.heightProperty());
+        pbBin.prefWidthProperty().bind(scene.heightProperty());
         HBox textBox = new HBox(mcode);
         HBox cleBox = new HBox(lbMessCle,lbCle);
         HBox messCodBox = new HBox(lbMessCod,lbCodage);
         HBox cleDecBox = new HBox(lbMessDecCle,lbCleDec);
         HBox messDecBox = new HBox(lbMessDec, lbDecodage);
         HBox btns = new HBox(chooseFile,coder,decoder);
+        HBox btnsBin = new HBox(chooseBin, coderBin, decoderBin);
 
         VBox box = new VBox(textBox, submit, cleBox, messCodBox, cleDecBox, messDecBox);
         VBox boxFile = new VBox(pb,lbPath,btns,infoState);
-        VBox boxImg = new VBox(chooseImg);
+        VBox boxBin = new VBox(pbBin, btnsBin);
         box.setPadding(new Insets(10,10,10,10));
         box.setSpacing(10);
         box.prefHeightProperty().bind(scene.heightProperty());
@@ -101,13 +114,13 @@ public class Main extends Application{
         boxFile.setSpacing(10);
         boxFile.prefHeightProperty().bind(scene.heightProperty());
         boxFile.prefWidthProperty().bind(scene.widthProperty());
-        boxImg.setPadding(new Insets(10));
-        boxImg.setSpacing(10);
-        boxImg.prefHeightProperty().bind(scene.heightProperty());
-        boxImg.prefWidthProperty().bind(scene.widthProperty());
+        boxBin.setPadding(new Insets(10));
+        boxBin.setSpacing(10);
+        boxBin.prefHeightProperty().bind(scene.heightProperty());
+        boxBin.prefWidthProperty().bind(scene.widthProperty());
         tab.setContent(box);
         tabFile.setContent(boxFile);
-        tabImg.setContent(boxImg);
+        tabImg.setContent(boxBin);
         tabPane.setTabClosingPolicy(TabClosingPolicy.UNAVAILABLE);
         tabPane.getTabs().add(tab);
         tabPane.getTabs().add(tabFile);
@@ -122,135 +135,189 @@ public class Main extends Application{
          * Events
          */
 
-         submit.setOnAction(new EventHandler<ActionEvent>() {
+        submit.setOnAction(new EventHandler<ActionEvent>() {
 
-             public void handle(ActionEvent event) {
-                 Codage c = new Codage(mcode.getText());
-                 c.init();
-                 c.codage();
-                 c.decodage();
-                 lbCle.setText(c.getCleStr());
-                 lbCodage.setText(c.getMessageCode());
-                 lbCleDec.setText(c.getCleStr());
-                 lbDecodage.setText(c.getMessageDecode());
-             }
-         });
-         chooseFile.setOnAction(new EventHandler<ActionEvent>() {
-             public void handle(ActionEvent event) {
-            	 FileChooser.ExtensionFilter extFilter = 
-                         new FileChooser.ExtensionFilter("TEXT files (*.txt)", "*.txt");
-                 fileChooser.getExtensionFilters().add(extFilter);
-                 File f = fileChooser.showOpenDialog(primaryStage);
-                 
-                 
-                 if (f != null) {
-                	 
-                     c = new CodageFichierTxt(f);
-                     c.init();
-                     System.out.println();
-                     coder.setDisable(false);
-                     decoder.setDisable(false);
-                     lbPath.setText(f.getPath());
-                 }
-                 
-             }
-         });
-         
-         coder.setOnAction(new EventHandler<ActionEvent>() {
-
-			@Override
-			public void handle(ActionEvent arg0) {
-				// TODO Auto-generated method stub
-				Task<Void> task = new Task<Void>() {
-					@Override protected Void call() throws Exception {
-						pb.progressProperty().unbind();
-						pb.progressProperty().bind(c.progressProperty());
-						
-		
-						c.progressProperty().addListener((obs, oldProgress, newProgress) 
-						->updateProgress(newProgress.doubleValue(), 1));						
-						c.codage();
-						c.saveCodeToFile();
-						
-						Platform.runLater(new Runnable() {
-						    @Override
-						    public void run() {
-						    	infoState.setText("Fichier codé avec succés !");
-						    }
-						});
-						return null;
-					}
-				};
-				
-				Thread th = new Thread(task);
-				th.start();
-				
-			}
-        	 
-        	 
-         });
-         
-         
-         
-         decoder.setOnAction(new EventHandler<ActionEvent>() {
- 			@Override
- 			public void handle(ActionEvent arg0) {
+            public void handle(ActionEvent event) {
+                Codage c = new Codage(mcode.getText());
+                c.init();
+                c.codage();
+                c.decodage();
+                lbCle.setText(c.getCleStr());
+                lbCodage.setText(c.getMessageCode());
+                lbCleDec.setText(c.getCleStr());
+                lbDecodage.setText(c.getMessageDecode());
+            }
+        });
+        
+        chooseFile.setOnAction(new EventHandler<ActionEvent>() {
+            public void handle(ActionEvent event) {
                 FileChooser.ExtensionFilter extFilter = 
-                      new FileChooser.ExtensionFilter("TEXT files (*.txt)", "*.txt");
-                File f = fileChooserDeck.showOpenDialog(primaryStage);
-                
-                c.setFname(f.getName());
-                Task<Void> task = new Task<Void>() {
-					@Override protected Void call() throws Exception {
-						pb.progressProperty().unbind();
-						pb.progressProperty().bind(c.progressProperty());
-						
-		
-						c.progressProperty().addListener((obs, oldProgress, newProgress) 
-						->updateProgress(newProgress.doubleValue(), 1));
-						
-						c.decodage();
-		                c.saveDecodeToFile();
-						
-						Platform.runLater(new Runnable() {
-						    @Override
-						    public void run() {
-						    	infoState.setText("Fichier d�codé avec succés !");
-						    }
-						});
-						return null;
-					}
-				};
-               
-				Thread th = new Thread(task);
-				th.start();
- 			}
-         	 
-         	 
-          });
+                    new FileChooser.ExtensionFilter("TEXT files (*.txt)", "*.txt");
+                fileChooser.getExtensionFilters().add(extFilter);
+                File f = fileChooser.showOpenDialog(primaryStage);
+                 
+                if (f != null) {                
+                    c = new CodageFichierTxt(f);
+                    c.init();
+                    System.out.println();
+                    coder.setDisable(false);
+                    decoder.setDisable(false);
+                    lbPath.setText(f.getPath());
+                }    
+            }
+        });
          
-         chooseImg.setOnAction(new EventHandler<ActionEvent>() {
-             public void handle(ActionEvent event) {
-            	 /*FileChooser.ExtensionFilter extFilter = 
-                         new FileChooser.ExtensionFilter("TEXT files (*.txt)", "*.txt");
-                 fileChooser.getExtensionFilters().add(extFilter);*/
-                 File f = imgChooser.showOpenDialog(primaryStage);
-                 
-                 
-                 if (f != null) {
-                     lbPath.setText(f.getPath());
-                     cImg = new CodageFichierBin(f);
-                     cImg.init();
-                     cImg.codage();
-                     cImg.decodage();
-                     cImg.saveImgToFile();
+        coder.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            public void handle(ActionEvent arg0) {
+            // TODO Auto-generated method stub
+                Task<Void> task = new Task<Void>() {
+                    @Override protected Void call() throws Exception {
+                        pb.progressProperty().unbind();
+			pb.progressProperty().bind(c.progressProperty());
+			c.progressProperty().addListener((obs, oldProgress, newProgress)
+                                ->updateProgress(newProgress.doubleValue(), 1));						
+                        c.codage();
+                        c.saveCodeToFile();
+
+                        Platform.runLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                infoState.setText("Fichier codé avec succés !");
+                            }
+                        });
+                        return null;
+                    }
+                };
+				
+                Thread th = new Thread(task);
+                th.start();
+				
+            }	 
+        });
+         
+        decoder.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+               public void handle(ActionEvent arg0) {
+                    FileChooser.ExtensionFilter extFilter = 
+                            new FileChooser.ExtensionFilter("TEXT files (*.txt)", "*.txt");
+                    File f = fileChooserDeck.showOpenDialog(primaryStage);
+           
+                    c.setFname(f.getName());
+                    Task<Void> task = new Task<Void>() {
+                        @Override protected Void call() throws Exception {
+                            pb.progressProperty().unbind();
+                            pb.progressProperty().bind(c.progressProperty());
+
+                            c.progressProperty().addListener((obs, oldProgress, newProgress)
+                                    ->updateProgress(newProgress.doubleValue(), 1));
+
+                            c.decodage();
+                            c.saveDecodeToFile();
+
+                            Platform.runLater(new Runnable() {
+                                @Override
+                                public void run() {
+                                    infoState.setText("Fichier d�codé avec succés !");
+                                }
+                            });
+
+                            return null;
+                        }
+                    };
+
+                    Thread th = new Thread(task);
+                    th.start();
+                }
+         	 
+        });
+        
+         
+        chooseBin.setOnAction(new EventHandler<ActionEvent>() {
+            public void handle(ActionEvent event) {    
+            
+                File f = binChooser.showOpenDialog(primaryStage);
+
+                if (f != null) {
+                    cBin = new CodageFichierBin(f);
+                    cBin.init();
+                    coderBin.setDisable(false);
+                    decoderBin.setDisable(false);
                      
-                     /*coder.setDisable(false);
+                    /*coder.setDisable(false);
                      decoder.setDisable(false);*/
-                 }
-                 
+                }   
+            }
+        });
+         
+        coderBin.setOnAction(new EventHandler<ActionEvent>() {
+
+            @Override
+            public void handle(ActionEvent arg0) {
+                // TODO Auto-generated method stub
+                Task<Void> task = new Task<Void>() {
+                    @Override protected Void call() throws Exception {
+                        pbBin.progressProperty().unbind();
+                        pbBin.progressProperty().bind(cBin.progressProperty());
+                        
+                        cBin.progressProperty().addListener((obs, oldProgress, newProgress)
+                                ->updateProgress(newProgress.doubleValue(), 1));						
+                        
+                        
+
+                        Platform.runLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                //infoState.setText("Fichier codé avec succés !");
+                            }
+                        });
+                        return null;
+                    }
+                };
+                cBin.codage();
+                cBin.saveCodeBinToFile();
+                Thread th = new Thread(task);
+                th.start();
+        }
+
+
+       });
+         
+         
+         
+        decoderBin.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent arg0) {
+                File f = binChooserDeck.showOpenDialog(primaryStage);
+
+                cBin.setFname(f.getName());
+                Task<Void> task = new Task<Void>() {
+                    @Override protected Void call() throws Exception {
+                        pbBin.progressProperty().unbind();
+                        pbBin.progressProperty().bind(cBin.progressProperty());
+                        
+                        cBin.progressProperty().addListener((obs, oldProgress, newProgress)
+                                ->updateProgress(newProgress.doubleValue(), 1));
+
+                        cBin.decodage();
+                        cBin.saveDecodeBinToFile();
+
+                        Platform.runLater(new Runnable() {
+                            @Override
+                            public void run() {
+                                //infoState.setText("Fichier d�codé avec succés !");
+                            }
+                        });
+                        return null;
+                    }
+                };
+                
+                
+                Thread th = new Thread(task);
+                th.start();
              }
-         });
+        });
          
          primaryStage.show();
     }

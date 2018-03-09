@@ -19,6 +19,8 @@ import java.io.UnsupportedEncodingException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
@@ -31,19 +33,23 @@ public class CodageFichierBin extends Codage{
 
     private final String filename;
     private final String extension;
+    private  String test;
     
     public CodageFichierBin(File f) {
         super("");
         // TODO Auto-generated constructor stub
+        this.fname = f.getName();
         this.filename = f.getName().lastIndexOf(".") > 0 ? f.getName().substring(0, f.getName().lastIndexOf(".")) : "";
         this.extension = f.getName().lastIndexOf(".") > 0? f.getName().substring(f.getName().lastIndexOf(".")+1).toLowerCase() : "";
         this.NBCHARS = 32;
+        this.test="";
         try {
             byte[] b = Files.readAllBytes(Paths.get(f.getPath()));
             StringBuilder imgBin = new StringBuilder();
             for(byte bn : b){
                 imgBin.append(String.format("%8s", Integer.toBinaryString(bn & 0xFF)).replace(' ', '0'));
             }
+            this.test = imgBin.toString();
             super.setContent(convertBinToLetters(imgBin.toString()).toUpperCase());
         } catch (IOException e) {
             // TODO Auto-generated catch block
@@ -77,7 +83,7 @@ public class CodageFichierBin extends Codage{
         for(int i = 0; i < str.length(); i++){
             int current = (int)(str.charAt(i) - 'A');
             StringBuilder number = new StringBuilder(Integer.toBinaryString(current));
-            while(number.length() != 5 && i != str.length() -1){
+            while(number.length() < 5 && i != str.length() -1){
                 number.insert(0, "0");
             }
             
@@ -109,34 +115,24 @@ public class CodageFichierBin extends Codage{
     
     @Override
     public String arrayToString(ArrayList<Integer> array){
+        Map<Integer,String> m = new HashMap<>();
+        m.put(0, "`");
+        for(int i = 1; i < 32; i++)
+            m.put(i, ""+(char)(i+64));
+        
         int lg = array.size();
-        String message = "";
+        StringBuilder message = new StringBuilder();
 
         for(int i = 0; i < lg; i++){
-            if(array.get(i) == 27)
-                message += "[";
-            else if(array.get(i) == 28)
-                message += "\\";
-            else if(array.get(i) == 29)
-                message += "]";
-            else if(array.get(i) == 30)
-                message += "^";
-            else if(array.get(i) == 31)
-                message += "_";
-            else if(array.get(i) == 0)
-                message += "`";
-            else
-                message += (char) (array.get(i) + 64);
+            progress.set(1.0*i / 100);
+            message.append(m.get(array.get(i)));
        }
-
-        return message;
+        
+        return message.toString();
     }
-        
-    public void saveImgToFile(){
-        saveDeck(filename);
-        setDeckFromFile(filename, this.cartes);
-        String binFin = convertLetterToBin(this.result);
-        
+    
+    public void saveCodeBinToFile(){
+        String binFin = convertLetterToBin(this.mCodeStr);
         byte[] data = new byte[binFin.length()/8 -1];
         for(int i = 0; i < data.length - 1; i++){
             int val = Integer.parseInt(binFin.substring(i*8,(i*8)+8),2);
@@ -145,7 +141,7 @@ public class CodageFichierBin extends Codage{
         OutputStream out = null;
 
         try {
-            out = new BufferedOutputStream(new FileOutputStream(this.filename + "_decode." + this.extension));
+            out = new BufferedOutputStream(new FileOutputStream(this.filename + "_code." + this.extension));
             out.write(data);
         } catch (FileNotFoundException ex) {
             Logger.getLogger(CodageFichierBin.class.getName()).log(Level.SEVERE, null, ex);
@@ -159,5 +155,31 @@ public class CodageFichierBin extends Codage{
             }
         }
 
+    }
+    
+    public void saveDecodeBinToFile(){
+        String binFin = convertLetterToBin(this.result);        
+        byte[] data = new byte[binFin.length()/8 -1];
+        for(int i = 0; i < data.length - 1; i++){
+            int val = Integer.parseInt(binFin.substring(i*8,(i*8)+8),2);
+            data[i] = (byte) val;
+        }
+        OutputStream out = null;
+
+        try {
+            String filename = this.fname.lastIndexOf(".") > 0 ? this.fname.substring(0,this.fname.lastIndexOf(".")-5).toLowerCase() + "_decode" + this.extension : "";
+            out = new BufferedOutputStream(new FileOutputStream(this.filename + "_decode." + this.extension));
+            out.write(data);
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(CodageFichierBin.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(CodageFichierBin.class.getName()).log(Level.SEVERE, null, ex);
+        } /*finally {
+            if (out != null) try {
+                out.close();
+            } catch (IOException ex) {
+                Logger.getLogger(CodageFichierBin.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }*/
     }
 }
