@@ -133,10 +133,11 @@ public class Main extends Application{
 
         primaryStage.setScene(scene);
 
-        /*
-         * Events
+        /**
+         * EVENTS
          */
-
+        
+        
         submit.setOnAction(new EventHandler<ActionEvent>() {
 
             public void handle(ActionEvent event) {
@@ -151,40 +152,58 @@ public class Main extends Application{
             }
         });
         
+        /**
+         * Sélection de fichier: - Si le fichier contient "_code" alors c'est un fichier codé et on pourra alors seulement le décoder
+         * 						 - Sinon c'est un fichier à coder
+         */
         chooseFile.setOnAction(new EventHandler<ActionEvent>() {
         	
             public void handle(ActionEvent event) {
+            	//On désactive les boutons pour coder et décoder
             	coder.setDisable(true);
             	decoder.setDisable(true);
+            	//On choisi le fichier
                 FileChooser.ExtensionFilter extFilter = 
                     new FileChooser.ExtensionFilter("TEXT files (*.txt)", "*.txt");
                 fileChooser.getExtensionFilters().add(extFilter);
                 File f = fileChooser.showOpenDialog(primaryStage);
                 
-                if (f != null) {                
-                    c = new CodageFichierTxt(f);                    
+                //Si le fichier existe
+                if (f != null) {
+                	//On instancie CodageFichierTxt
+                    c = new CodageFichierTxt(f);  
+                    //Si le fichier contient "_code" alors on active seulement le bouton décoder car on ne pourra pas coder
                     if(f.getName().contains("_code")) {
                     	System.out.println("Fichier codé chargé");
+                    	//On set le message codé
                     	c.setMCodeFromFile(f);
                     	decoder.setDisable(false);
                     }else {
+                    	//sinon on initialise le codage
                     	c.init();
                     	System.out.println();
                     	coder.setDisable(false);     
                     }
+                    
+                    //on indique quel fichier a été séléctionné
                     lbPath.setText(f.getPath());
                     
                 }    
             }
         });
-         
+        
+        /**
+         * Codage: on utilise ici un thread afin de ne pas bloquer l'affichage car le codage peut être long pour les fichiers lourds
+         */
         coder.setOnAction(new EventHandler<ActionEvent>() {
 
             @Override
             public void handle(ActionEvent arg0) {
             // TODO Auto-generated method stub
+            	//on définit un nouveau thread dans lequel on va faire nos opérations et mettre a jour la barre de progression
                 Task<Void> task = new Task<Void>() {
                     @Override protected Void call() throws Exception {
+                    	//MAJ de la barre de progression
                         pb.progressProperty().unbind();
                         pb.progressProperty().bind(c.progressProperty());
 			c.progressProperty().addListener((obs, oldProgress, newProgress)
@@ -201,17 +220,22 @@ public class Main extends Application{
                         return null;
                     }
                 };
-				
+				//Instanciation du thread
                 Thread th = new Thread(task);
+                //On lance le thread
                 th.start();
 				coder.setDisable(true);
 				decoder.setDisable(false);
             }	 
         });
-         
+        
+        /**
+         * Décodage: De même que pour le codage on utilise un thread et une barre de progression. On récupère aussi le fichier contenant le paquet de cartes
+         */
         decoder.setOnAction(new EventHandler<ActionEvent>() {
             @Override
                public void handle(ActionEvent arg0) {
+            		//Récupération du fichier contenant le paquet de cartes.
                     FileChooser.ExtensionFilter extFilter = 
                             new FileChooser.ExtensionFilter("TEXT files (*.txt)", "*.txt");
                     File f = fileChooserDeck.showOpenDialog(primaryStage);
@@ -248,11 +272,14 @@ public class Main extends Application{
          	 
         });
         
-         
+        //Même principe que pour les fichiers textes
         chooseBin.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(ActionEvent event) {    
             	coderBin.setDisable(true);
                 decoderBin.setDisable(true);
+                FileChooser.ExtensionFilter extFilter = 
+                        new FileChooser.ExtensionFilter("BINARY files", "*.jpeg", "*.jpg", "*.gif", "*.mp3", "*.mp4", "*.avi", "*.flv", "*.mkv");
+                    binChooser.getExtensionFilters().add(extFilter);
                 File f = binChooser.showOpenDialog(primaryStage);
                 
                 if (f != null) {                
@@ -271,7 +298,8 @@ public class Main extends Application{
                 }
             }
         });
-         
+        
+        //Même principe que pour les fichiers textes
         coderBin.setOnAction(new EventHandler<ActionEvent>() {
 
             @Override
@@ -301,7 +329,7 @@ public class Main extends Application{
                 
                 Thread th = new Thread(task);
                 th.start();
-               
+                coderBin.setDisable(true);
                 decoderBin.setDisable(false);
         }
 
@@ -309,7 +337,7 @@ public class Main extends Application{
        });
          
          
-         
+        //Même principe que pour les fichiers textes
         decoderBin.setOnAction(new EventHandler<ActionEvent>() {
             @Override
             public void handle(ActionEvent arg0) {
@@ -341,6 +369,7 @@ public class Main extends Application{
                 
                 Thread th = new Thread(task);
                 th.start();
+                decoderBin.setDisable(true);
              }
         });
          

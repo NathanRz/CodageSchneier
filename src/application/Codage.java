@@ -33,7 +33,9 @@ public class Codage{
     protected String mCodeStr;
     protected String result;
     protected String fname;
+    //Joker Noir
     protected final int JN = 53;
+    //Joker Rouge
     protected final int JR = 54;
     protected int NBCHARS = 35;
     protected final ReadOnlyDoubleWrapper progress = new ReadOnlyDoubleWrapper();
@@ -48,6 +50,10 @@ public class Codage{
             this.cartesDec = new ArrayList<Integer>();
     }
 
+    /**
+     * Méthode permettant l'initialisation des différents paramètres dont on a besoin pour le codage
+     * C'est à dire le paquet de cartes mélangé, la source à coder ainsi que la clé via l'appel de la fonction generateKey()
+     */
     public void init(){
         //Initialisation des cartes.
         for(int i = 1; i <= 54;i++){
@@ -62,15 +68,27 @@ public class Codage{
 
         //GÃ©nÃ©ration de la clef de codage
         if(this.fname != null){
+        	//On sauvegarde le contenu du paquet tel qu'il est dans un fichier
             saveDeck(this.fname);
+            //On génère la clé de codage
             this.generateKey(this.cartes);
         }else{
-            ArrayList<Integer> temp = new ArrayList(this.cartes);           
+        	//On sauvegarde la configuration du paquet de cartes
+            ArrayList<Integer> temp = new ArrayList(this.cartes); 
+            //On génère la clé de codage qui effectue des opérations sur le paquet
             this.generateKey(this.cartes);
+            //On revient à la configuration originelle
             this.cartes = new ArrayList<>(temp);
         }
     }
 
+    /**
+     * ETAPE 1
+     * Recul du joker noir d’une position : Vous faites reculer le joker noir d’une place
+     * (vous le permutez avec la carte qui est juste derrière lui). Si le joker noir est en dernière position
+     * il passe derrière la carte du dessus (donc, en deuxième position).
+     * @param deck
+     */
     public void etape1(ArrayList<Integer> deck){
         int idx = deck.indexOf(JN);
 
@@ -79,9 +97,13 @@ public class Codage{
             deck.add(1, JN);
         else
             deck.add(idx+1,JN);
-        //System.out.println(cartes.toString());
     }
-
+    /**
+     * ETAPE 2
+     * Recul du joker rouge de deux positions : Vous faites reculer le joker rouge de deux cartes. S’il était en
+     * dernière position, il passe en troisième position; s’il était en avant dernière position il passe en deuxième.
+     * @param deck
+     */
     public void etape2(ArrayList<Integer> deck){
         int idx = deck.indexOf(JR);
 
@@ -92,9 +114,15 @@ public class Codage{
             deck.add(1, JR);
         else
             deck.add(idx+2, JR);
-        //System.out.println(cartes.toString());
     }
-
+    
+    /**
+     * ETAPE 3
+     * Double coupe par rapport aux jokers. Vouz repérez les deux jokers et vous intervertissez le paquet des
+     * cartes situées au-dessus du joker qui est en premier avec le paquet de cartes qui est au-dessous du joker
+     * qui est en second. Dans cette opération la couleur des jokers est sans importance.
+     * @param deck
+     */
     public void etape3(ArrayList<Integer> deck){
         int idxJR = deck.indexOf(JR);
         int idxJN = deck.indexOf(JN);
@@ -114,6 +142,15 @@ public class Codage{
         //System.out.println(cartes.toString());
     }
 
+    /**
+     * ETAPE 4
+     * Coupe simple déterminée par la dernière carte : vous regardez la dernière carte et vous évaluez son
+     * numéro selon l’ordre du Bridge : trèfle-carreau-cœur-pique et dans chaque couleur as, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+     * valet, dame et roi (l’as de trèfle a ainsi le numéro 1, le roi de pique a le numéro 52). Les jokers on
+     * par convention le numéro 53. Si le num´ero de la dernière carte est n vous prenez les n premières cartes
+     * du dessus du paquet et les placez derrière les autres cartes à l’exception de la dernière carte qui reste la dernière.
+     * @param deck
+     */
     public void etape4(ArrayList<Integer> deck){
         int val = deck.get(deck.size() - 1);
 
@@ -124,6 +161,17 @@ public class Codage{
         //System.out.println(cartes.toString());
     }
 
+    /**
+     * ETAPE 5
+     * Lecture d’une lettre pseudo-aléatoire : Vous regardez la numéro de la première carte, soit n ce numéro. Vous comptez
+     * n cartes à partir du début et vous regardez la carte à laquelle vous êtes arrivée (la n + 1-ième), soit m son numero.
+     * Si c’est un jokers vous refaites une op´eration complète de mélange et de lecture (les points 1-2-3-4-5). Si m dépasse
+     * 26 vous soustrayez 26. Au nombre entre 1 et 26 ainsi obtenu est associée une lettre qui est la lettre suivante dans du flux de clefs.
+     * L’opération de lecture ne modifie pas l’ordre du paquet de cartes. Vous procédez de la même façon pour avoir les autres lettres du flux de clefs. 
+     * Lorsque vous en avez un nombre suffisant vous pouvez coder votre message.
+     * @param deck
+     * @return valeur : int
+     */
     public int etape5(ArrayList<Integer> deck){
         int val = deck.get(0);
         int valeur = deck.get(val-1);
@@ -139,7 +187,12 @@ public class Codage{
         //System.out.println(cartes.toString());
         return res;
     }
-
+    
+    /**
+     * Méthode permettant la récupération d'une valeur de clé. On appel simplement les 5 étapes à la suite.
+     * @param deck
+     * @return valeur :  int
+     */
     public int operationsFluxClef(ArrayList<Integer> deck){
         etape1(deck);
         etape2(deck);
@@ -148,11 +201,21 @@ public class Codage{
        return etape5(deck);
     }
     
+    /**
+     * Méthode permettant de générer la totalité de la clé de codage en fonction de la taille de la source à codée.
+     * @param deck
+     */
     public void generateKey(ArrayList<Integer> deck){
     	for(int i = 0; i < this.contentASCII.size(); i++)
     		this.clef.add(this.operationsFluxClef(deck));
     }
-
+    
+    /**
+     * Méthode permettant de passer de notre source à coder qui est sous forme de String à un ArrayList d'entiers représentant les codes de chaque caractères.
+     * Dans notre cas nous codons 35 caractères différents [A-Z ,;:!?']. En théorie on peut coder jusqu'à 52 caractères.
+     * @param array : ArrayList<Integer>
+     * @param message : String
+     */
     public void stringToArray(ArrayList<Integer> array,String message){
         int lg = message.length();
         progress.set(0);
@@ -186,13 +249,22 @@ public class Codage{
         }
         
     }
-
+    
+    /**
+     * Méthode permettant de convertir un ArrayList d'entiers à un String. Ici on applique la méthode inverse pour
+     * retrouver les caractères correspondant aux codes.
+     * @param array : ArrayList<Integer>
+     * @return message : String
+     */
     public String arrayToString(ArrayList<Integer> array){
+    	//On utilise une Map pour convertir plus rapidement les codes en caractères
     	Map<Integer,String> m = new HashMap<>();
     	m.put(0, "\r\n");
+    	//On ajoute les lettres A à Z dans la Map
     	for(int i = 1; i < 27; i++)
     		m.put(i, ""+(char)(i+64));
     	
+    	//Puis on ajoute les différents caractères spéciaux que nous prenons en compte.
     	m.put(27, " ");
     	m.put(28, "'");
     	m.put(29, ".");
@@ -203,15 +275,17 @@ public class Codage{
     	m.put(34, ";");
     	m.put(35, "\n");
     	
-    	
+    	//Progression de la barre de progression dans l'interface mise à 0
     	progress.set(0);
         int lg = array.size();
+        //On utilise encore un StringBuilder -> plus rapide qu'un String pour les chaines de caractères très longues.
         StringBuilder message = new StringBuilder(); 
         
         for(int i = 0; i < lg; i++){
+        	//Permet de mettre à jour la barre de progression dans l'interface.
         	progress.set(1.0*i / lg);
         	
-        	// 
+        	//Débugage on vérifie que tous les caractères ont bien été codés.
         	if(m.get(array.get(i)) == null) {
         		System.out.println("NULL : " +i+ "CHAR : " + array.get(i));
         	}
@@ -220,70 +294,99 @@ public class Codage{
 
         return message.toString();
     }
-
+    
+    /**
+     * Méthode permettant de coder la source par rapport à la clé de codage
+     */
     public void codage(){
+    	//On récupère la taille de la source.
         int lg = this.contentASCII.size();
         int val;
+        
+        //On parcourt la source
         for(int i =0; i < lg; i++){
-           val = ((this.contentASCII.get(i) + this.clef.get(i)) % NBCHARS) + 1;
-           this.mCode.add(val);
+        	//On code le caractère
+		    val = ((this.contentASCII.get(i) + this.clef.get(i)) % NBCHARS) + 1;
+		    this.mCode.add(val);
         }
+        //On transforme notre Array contenant le code en String
         this.mCodeStr = this.arrayToString(this.mCode);
+        //On clear la clé
         this.clef.clear();
     }
 
+    /**
+     * Méthode permettant de décoder le message codé en fonction de la clé.
+     * A noter que l'on recalcul la clé lors du décodage puisque pour décoder le fichier nous récupérons le fichier contenant l'état initial du paquet
+     * qui a servit à produire la clé de codage.
+     */
     public void decodage(){
         if(this.fname != null){
-            
+            //On récupère le paquet de cartes depuis le fichier
             setDeckFromFile(this.fname, this.cartesDec);
-            
-            generateKey(this.cartesDec);
-            
+            //On génère la clé
+            generateKey(this.cartesDec);   
         }
         else
             generateKey(this.cartes);
         
         
-        
+        //On récupère la taille du message codé
         int lg = this.mCode.size();
         
         int val;
+        //On parcourt celui-ci
         for(int i =0; i < lg; i++){
+        	//On décode le caractère en fonction de la clé
             val = (this.mCode.get(i) - this.clef.get(i)) % NBCHARS -1;
+            //Si la valeur résultant est inférieur à 0 on lui ajoute le nombre de caracères pris en compte.
             if(val < 0){
                 val += NBCHARS;
             }
       
             this.mDecode.add(val);
         }
+        //Enfin on transforme l'ArrayList en un String
         this.result = this.arrayToString(this.mDecode);
         
     }
     
+    /**
+     * Méthode permettant de sauvegarder le paquet de cartes dans un fichier texte 
+     * @param filename
+     */
     public void saveDeck(String filename){
         PrintWriter writer;
         try {
+        	//Nom du fichier : "XXX_deck.txt"
             filename = filename.lastIndexOf(".") > 0 ? filename.substring(0,filename.lastIndexOf(".")).toLowerCase() + "_deck.txt" : "";
             writer = new PrintWriter(filename, "UTF-8");
+            //On print le contenu de l'ArrayList dans le fichier texte
             writer.print(this.cartes.toString());
             writer.close();
         } catch (FileNotFoundException | UnsupportedEncodingException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        // TODO Auto-generated catch block
         
     }
     
+    /**
+     * Méthode permettant de récupérer le paquet de carte depuis un fichier texte
+     * @param filename : String , Nom du fichier
+     * @param array : ArrayList<Integer>, ArrayList dans lequel stocker le paquet de cartes.
+     */
     public void setDeckFromFile(String filename, ArrayList<Integer> array){
         BufferedReader reader = null;
         try {
+        	//On utilise un buffer pour lire le fichier, on lit ligne par ligne
             reader = Files.newBufferedReader(Paths.get(filename), StandardCharsets.UTF_8);
             String line;
             String data = "";
             while ((line = reader.readLine()) != null) {
                 data += line +"\n";
             }
+            //On récupère seulement les nombres dans le fichier text (de base au format "[0,1,2,...,N]")
             String[] numbers = data.split("\\[")[1].split(",");
             for(int i = 1; i < numbers.length; i++){
                 StringBuilder temp = new StringBuilder(numbers[i]);
@@ -339,6 +442,10 @@ public class Codage{
     	
     }
     
+    /**
+     * Méthode permettant de charger le contenu d'un fichier codé au préalable
+     * @param f
+     */
     public void setMCodeFromFile(File f) {
 		BufferedReader reader;
 		try {

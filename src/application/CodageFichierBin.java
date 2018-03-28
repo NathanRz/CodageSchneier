@@ -25,10 +25,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 
-/**
- *
- * @author legol
- */
+
 public class CodageFichierBin extends Codage{
 
     private final String filename;
