@@ -70,7 +70,9 @@ public class Main extends Application{
         Label lbCleDec = new Label();
         Label lbDecodage = new Label();
         Label lbPath = new Label();
+        Label lbPathBin = new Label();
         Label infoState = new Label();
+        Label infoStateBin = new Label();
         Button submit = new Button("Encrypter");
         Button chooseFile = new Button("Sélectionner un fichier");
         Button chooseBin = new Button("Sélectionner un fichier");
@@ -105,7 +107,7 @@ public class Main extends Application{
 
         VBox box = new VBox(textBox, submit, cleBox, messCodBox, cleDecBox, messDecBox);
         VBox boxFile = new VBox(pb,lbPath,btns,infoState);
-        VBox boxBin = new VBox(pbBin, btnsBin);
+        VBox boxBin = new VBox(pbBin, lbPathBin, btnsBin, infoStateBin);
         box.setPadding(new Insets(10,10,10,10));
         box.setSpacing(10);
         box.prefHeightProperty().bind(scene.heightProperty());
@@ -150,19 +152,28 @@ public class Main extends Application{
         });
         
         chooseFile.setOnAction(new EventHandler<ActionEvent>() {
+        	
             public void handle(ActionEvent event) {
+            	coder.setDisable(true);
+            	decoder.setDisable(true);
                 FileChooser.ExtensionFilter extFilter = 
                     new FileChooser.ExtensionFilter("TEXT files (*.txt)", "*.txt");
                 fileChooser.getExtensionFilters().add(extFilter);
                 File f = fileChooser.showOpenDialog(primaryStage);
-                 
+                
                 if (f != null) {                
-                    c = new CodageFichierTxt(f);
-                    c.init();
-                    System.out.println();
-                    coder.setDisable(false);
-                    decoder.setDisable(false);
+                    c = new CodageFichierTxt(f);                    
+                    if(f.getName().contains("_code")) {
+                    	System.out.println("Fichier cod� charg�");
+                    	c.setMCodeFromFile(f);
+                    	decoder.setDisable(false);
+                    }else {
+                    	c.init();
+                    	System.out.println();
+                    	coder.setDisable(false);     
+                    }
                     lbPath.setText(f.getPath());
+                    
                 }    
             }
         });
@@ -175,7 +186,7 @@ public class Main extends Application{
                 Task<Void> task = new Task<Void>() {
                     @Override protected Void call() throws Exception {
                         pb.progressProperty().unbind();
-			pb.progressProperty().bind(c.progressProperty());
+                        pb.progressProperty().bind(c.progressProperty());
 			c.progressProperty().addListener((obs, oldProgress, newProgress)
                                 ->updateProgress(newProgress.doubleValue(), 1));						
                         c.codage();
@@ -193,7 +204,8 @@ public class Main extends Application{
 				
                 Thread th = new Thread(task);
                 th.start();
-				
+				coder.setDisable(true);
+				decoder.setDisable(false);
             }	 
         });
          
@@ -205,6 +217,7 @@ public class Main extends Application{
                     File f = fileChooserDeck.showOpenDialog(primaryStage);
            
                     c.setFname(f.getName());
+                    
                     Task<Void> task = new Task<Void>() {
                         @Override protected Void call() throws Exception {
                             pb.progressProperty().unbind();
@@ -215,6 +228,7 @@ public class Main extends Application{
 
                             c.decodage();
                             c.saveDecodeToFile();
+                           
 
                             Platform.runLater(new Runnable() {
                                 @Override
@@ -229,6 +243,7 @@ public class Main extends Application{
 
                     Thread th = new Thread(task);
                     th.start();
+                    decoder.setDisable(true);
                 }
          	 
         });
@@ -236,18 +251,24 @@ public class Main extends Application{
          
         chooseBin.setOnAction(new EventHandler<ActionEvent>() {
             public void handle(ActionEvent event) {    
-            
+            	coderBin.setDisable(true);
+                decoderBin.setDisable(true);
                 File f = binChooser.showOpenDialog(primaryStage);
-
-                if (f != null) {
-                    cBin = new CodageFichierBin(f);
-                    cBin.init();
-                    coderBin.setDisable(false);
-                    decoderBin.setDisable(false);
-                     
-                    /*coder.setDisable(false);
-                     decoder.setDisable(false);*/
-                }   
+                
+                if (f != null) {                
+                    cBin = new CodageFichierBin(f);                    
+                    if(f.getName().contains("_code")) {
+                    	System.out.println("Fichier cod� charg�");
+                    	cBin.setMCodeFromFile(f);
+                    	decoderBin.setDisable(false);
+                    }else {
+                    	cBin.init();
+                    	System.out.println();
+                    	coderBin.setDisable(false);     
+                    }
+                    lbPathBin.setText(f.getPath());
+                    
+                }
             }
         });
          
@@ -264,21 +285,24 @@ public class Main extends Application{
                         cBin.progressProperty().addListener((obs, oldProgress, newProgress)
                                 ->updateProgress(newProgress.doubleValue(), 1));						
                         
-                        
+                        cBin.codage();
+                        cBin.saveCodeBinToFile();
 
                         Platform.runLater(new Runnable() {
                             @Override
                             public void run() {
-                                //infoState.setText("Fichier codé avec succés !");
+                                infoStateBin.setText("Fichier codé avec succés !");
                             }
                         });
+
                         return null;
                     }
                 };
-                cBin.codage();
-                cBin.saveCodeBinToFile();
+                
                 Thread th = new Thread(task);
                 th.start();
+               
+                decoderBin.setDisable(false);
         }
 
 
@@ -306,9 +330,10 @@ public class Main extends Application{
                         Platform.runLater(new Runnable() {
                             @Override
                             public void run() {
-                                //infoState.setText("Fichier d�codé avec succés !");
+                                infoStateBin.setText("Fichier d�codé avec succés !");
                             }
                         });
+
                         return null;
                     }
                 };

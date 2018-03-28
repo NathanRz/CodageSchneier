@@ -170,16 +170,12 @@ public class CodageFichierBin extends Codage{
             String filename = this.fname.lastIndexOf(".") > 0 ? this.fname.substring(0,this.fname.lastIndexOf(".")-5).toLowerCase() + "_decode" + this.extension : "";
             out = new BufferedOutputStream(new FileOutputStream(this.filename + "_decode." + this.extension));
             out.write(data);
+            out.close();
         } catch (FileNotFoundException ex) {
             Logger.getLogger(CodageFichierBin.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             Logger.getLogger(CodageFichierBin.class.getName()).log(Level.SEVERE, null, ex);
-        } /*finally {
-            if (out != null) try {
-                out.close();
-            } catch (IOException ex) {
-                Logger.getLogger(CodageFichierBin.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }*/
+        }
+ 
     }
 }

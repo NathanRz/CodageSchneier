@@ -1,6 +1,7 @@
 package application;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -200,6 +201,7 @@ public class Codage{
     	m.put(32, "?");
     	m.put(33, ":");
     	m.put(34, ";");
+    	m.put(35, "\n");
     	
     	
     	progress.set(0);
@@ -208,6 +210,11 @@ public class Codage{
         
         for(int i = 0; i < lg; i++){
         	progress.set(1.0*i / lg);
+        	
+        	// 
+        	if(m.get(array.get(i)) == null) {
+        		System.out.println("NULL : " +i+ "CHAR : " + array.get(i));
+        	}
         	message.append(m.get(array.get(i)));
        }
 
@@ -236,8 +243,9 @@ public class Codage{
         else
             generateKey(this.cartes);
         
-        int lg = this.mCode.size();
         
+        
+        int lg = this.mCode.size();
         
         int val;
         for(int i =0; i < lg; i++){
@@ -248,8 +256,8 @@ public class Codage{
       
             this.mDecode.add(val);
         }
-
         this.result = this.arrayToString(this.mDecode);
+        
     }
     
     public void saveDeck(String filename){
@@ -326,6 +334,30 @@ public class Codage{
     public void setFname(String fname) {
     	this.fname = fname;
     }
+    
+    public void setMCode(String code) {
+    	
+    }
+    
+    public void setMCodeFromFile(File f) {
+		BufferedReader reader;
+		try {
+			reader = Files.newBufferedReader(Paths.get(f.getPath()), StandardCharsets.UTF_8);
+			StringBuilder content = new StringBuilder(); 
+			char[] buffer = new char[256];
+			int readChars;
+			while ((readChars = reader.read(buffer, 0, 256)) > 0)
+			    content.append(buffer, 0, readChars);
+			
+			this.stringToArray(this.mCode, content.toString());
+	    	//on copie dans contentASCII juste pour recupérer la taille pour la méthode generateKey
+	    	for(int i = 0; i < this.mCode.size(); i++)
+	    		this.contentASCII.add(0);
+		}catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 }
 
 
